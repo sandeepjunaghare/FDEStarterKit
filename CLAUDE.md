@@ -47,6 +47,7 @@ scripts/
 docs/runbook-deploy.md    # deploy procedure, troubleshooting, rollback, password rotation
 docs/runbook-kickoff.md   # brief → PRD → architecture → tickets → 4 worktree panes, minute by minute
 docs/templates/           # discovery-notes.md: stakeholder questions mapped to PRD sections
+docs/visual/one-page.html # non-technical one-pager (pane D): edit the `page` object; flags jargon on screen
 docs/<slug>.prd.md        # (per scenario) the what/why — /plan-create-prd
 docs/architecture.md      # (per scenario) the how — /plan-architecture
 docs/tickets/<slug>.md    # (per scenario) 4 parallel tickets, one per pane — /piv-slice-epic

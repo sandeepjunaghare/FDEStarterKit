@@ -234,3 +234,57 @@ After that, every push to `main` that touches `api/` redeploys once CI is green.
 - The container listens on Render's `$PORT` (default 8000 locally) and runs as a non-root user.
 - Free instances sleep when idle. The first request after a pause can take 30–60 s (the smoke script waits up to 90 s), so warm the URL before a demo.
 - The Streamlit UI will be a second service in `render.yaml`, with `API_URL` pointing at this one.
+
+---
+
+## Handoff
+
+> Fields in `<angle brackets>` are filled in per scenario. Everything else holds for any deployment of this kit.
+
+### What you're getting
+
+| Piece | Where | Start here |
+|---|---|---|
+| The product decision: problem, users, hypothesis, non-goals | `docs/<slug>.prd.md` | Read first |
+| The technical decisions and why | `docs/architecture.md`, `research/tech-stack.md` | Then this |
+| How the code is laid out, conventions, commands | `CLAUDE.md` | For anyone (or any agent) changing code |
+| Deploy, rollback, rotate the database password | `docs/runbook-deploy.md` | Before touching production |
+| Quality bar: golden set + eval harness | `evals/`, `evals/golden/<scenario>.yaml` | Before changing prompts, retrieval or guardrails |
+| A one-page explanation for non-technical readers | `docs/visual/one-page.html` | For stakeholders |
+
+### Who owns what
+
+| Area | Owner | Why it matters |
+|---|---|---|
+| **Golden eval set** (`evals/golden/`) | **<client domain expert>**, with an engineer maintaining the harness | The set defines "correct". It must come from the people who know the answers, and grow with every real failure |
+| Source documents and their freshness | <data owner> | Answers are only as current as the documents behind them |
+| Guardrail rules (what it refuses or escalates) | <product owner>, reviewed by engineering | The cost of a wrong answer sets how strict these are |
+| Prompts, retrieval, agents | Engineering | Change only with an eval run before and after (`run.py --compare`) |
+| Deploys, secrets, rotation | Engineering | `docs/runbook-deploy.md`; secrets live only in `.env` and Render, and CI blocks leaked keys |
+
+### Changing it safely
+
+1. Run the eval set and save the result: `cd evals && uv run python run.py golden/<scenario>.yaml`.
+2. Make the change, then re-run with `--compare results/<before>.json`. Ship only if no case broke.
+3. Every real-world wrong answer becomes a new golden case before it's fixed.
+
+### What to watch first in production
+
+| Signal | Why | Where |
+|---|---|---|
+| Retrieval hit rate on sampled questions | Most wrong answers start as a retrieval miss | Eval harness on a weekly sample |
+| Refusal / escalation rate | Too high means users give up; too low means guardrails are leaking | `action` in `/ask` responses, Langfuse |
+| Faithfulness on sampled answers | Catches answers that sound right but aren't in the sources | Claude judge, Langfuse scores |
+| Answer latency and cost per answer | The two numbers that decide whether it scales | Langfuse traces |
+
+### Known limits and Release 2
+
+- <limit found during the build, e.g. "tables inside PDFs are retrieved as plain text">
+- <non-goal from the PRD that users will ask for>
+- Release 2: <the next slice, and the hypothesis it tests>
+
+### If two engineers picked this up next week
+
+- **Engineer 1:** retrieval and evals. Grow the golden set from real questions, then tune chunking and top-k against it.
+- **Engineer 2:** front end and feedback. Add a thumbs-up/down that writes back to Langfuse, so real usage feeds the golden set.
+- **Kept with the lead:** the guardrail and critic rules, because a mistake there is the most expensive kind.

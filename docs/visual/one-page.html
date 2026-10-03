@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>One-page visual</title>
+<!--
+  Non-technical one-pager (16:9, screenshot- or present-ready). Edit ONLY the `page` object below.
+  Rules: before/after framing, plain words, numbers a stakeholder cares about, no technical terms.
+  Numbers: use what the build measured (eval results, timings). Anything not measured is a target and says
+  so (e.g. was: "target"). The example numbers below are illustrative only.
+  A red banner appears if a technical word sneaks in (list in JARGON). Open the file in a browser.
+-->
+<style>
+  :root {
+    --bg: #f6f4ef; --card: #ffffff; --ink: #1d1d1b; --muted: #5f5d57; --line: #e3dfd6;
+    --before: #b4532a; --before-soft: #f7e9e1; --after: #1f7a5a; --after-soft: #e2f1ea;
+    --accent: #2b4c7e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 16px;
+    grid-template-columns: minmax(0, 1fr); /* track can't grow past the viewport */
+    background: var(--bg); color: var(--ink);
+    font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  .slide {
+    width: min(1280px, 100%); aspect-ratio: 16 / 9; background: var(--card); border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,.08); padding: clamp(20px, 3.2vw, 44px);
+    display: grid; grid-template-rows: auto 1fr auto auto; gap: clamp(12px, 1.8vw, 22px);
+  }
+  header .kicker { color: var(--accent); font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+    font-size: clamp(11px, 1vw, 13px); }
+  header h1 { margin: 4px 0 0; font-size: clamp(22px, 2.6vw, 36px); line-height: 1.15; }
+  header p { margin: 6px 0 0; color: var(--muted); font-size: clamp(13px, 1.25vw, 17px); }
+
+  .flow { display: grid; grid-template-columns: 1fr auto 1fr; gap: clamp(10px, 1.5vw, 20px); align-items: stretch; }
+  .flow > *, .numbers > *, footer > * { min-width: 0; }
+  .col { border-radius: 16px; padding: clamp(12px, 1.6vw, 22px); display: flex; flex-direction: column; gap: 10px; }
+  .col.before { background: var(--before-soft); }
+  .col.after { background: var(--after-soft); }
+  .col h2 { margin: 0; font-size: clamp(15px, 1.5vw, 20px); }
+  .col.before h2 { color: var(--before); }
+  .col.after h2 { color: var(--after); }
+  .col ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; counter-reset: s; }
+  .col li { counter-increment: s; display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: start;
+    font-size: clamp(13px, 1.25vw, 16px); }
+  .col li::before { content: counter(s); width: 26px; height: 26px; border-radius: 50%; display: grid;
+    place-items: center; font-weight: 700; font-size: 13px; color: #fff; }
+  .col.before li::before { background: var(--before); }
+  .col.after li::before { background: var(--after); }
+  .col .feel { margin-top: auto; font-style: italic; color: var(--muted); font-size: clamp(12px, 1.15vw, 15px); }
+  .arrow { display: grid; place-items: center; font-size: clamp(24px, 3vw, 40px); color: var(--muted); }
+
+  .numbers { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(10px, 1.5vw, 20px); }
+  .num { border: 1px solid var(--line); border-radius: 14px; padding: clamp(10px, 1.3vw, 16px); }
+  .num .big { font-size: clamp(22px, 2.8vw, 38px); font-weight: 800; color: var(--accent); line-height: 1; }
+  .num .was { color: var(--muted); font-size: clamp(11px, 1vw, 13px); margin-top: 4px; }
+  .num .label { font-size: clamp(12px, 1.15vw, 15px); margin-top: 6px; }
+
+  footer { display: grid; grid-template-columns: 2fr 1fr; gap: clamp(10px, 1.5vw, 20px); align-items: start;
+    border-top: 1px solid var(--line); padding-top: clamp(8px, 1.2vw, 14px); }
+  footer h3 { margin: 0 0 6px; font-size: clamp(12px, 1.1vw, 14px); text-transform: uppercase;
+    letter-spacing: .04em; color: var(--muted); }
+  footer ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: clamp(12px, 1.15vw, 15px); }
+  footer li::before { content: "✓ "; color: var(--after); font-weight: 700; }
+  footer .next li::before { content: "→ "; color: var(--accent); }
+
+  #jargon { display: none; position: fixed; inset: 12px 12px auto 12px; background: #b3261e; color: #fff;
+    padding: 10px 14px; border-radius: 10px; font-weight: 600; z-index: 9; }
+  @media (max-width: 720px) {
+    .slide { aspect-ratio: auto; }
+    .flow, .numbers, footer { grid-template-columns: 1fr; }
+    .arrow { transform: rotate(90deg); }
+  }
+</style>
+</head>
+<body>
+<div id="jargon"></div>
+<main class="slide">
+  <header>
+    <div class="kicker" data-k="kicker"></div>
+    <h1 data-k="headline"></h1>
+    <p data-k="subhead"></p>
+  </header>
+  <section class="flow">
+    <div class="col before"><h2 data-k="beforeTitle"></h2><ol data-list="before"></ol><div class="feel" data-k="beforeFeel"></div></div>
+    <div class="arrow" aria-hidden="true">→</div>
+    <div class="col after"><h2 data-k="afterTitle"></h2><ol data-list="after"></ol><div class="feel" data-k="afterFeel"></div></div>
+  </section>
+  <section class="numbers" data-numbers></section>
+  <footer>
+    <div><h3 data-k="trustTitle"></h3><ul data-list="trust"></ul></div>
+    <div class="next"><h3 data-k="nextTitle"></h3><ul data-list="next"></ul></div>
+  </footer>
+</main>
+
+<script>
+// ===== Edit this object only. Example content: a fictional health-plan member. =====
+const page = {
+  kicker: "Acme Health · member questions",
+  headline: "Members get a clear, trustworthy answer about their plan in seconds",
+  subhead: "Instead of searching long documents or waiting on hold.",
+  beforeTitle: "Today",
+  before: [
+    "A member wonders what a specialist visit will cost",
+    "They search a 60-page plan booklet, or call and wait on hold",
+    "They often give up, guess, or get a surprise bill later",
+  ],
+  beforeFeel: "“I never know what I'll pay until the bill arrives.”",
+  afterTitle: "With the assistant",
+  after: [
+    "The member asks in their own words",
+    "They get a short answer with the exact page it came from",
+    "Anything risky, like medical advice, goes to a person instead",
+  ],
+  afterFeel: "“I knew the cost before I booked.”",
+  numbers: [
+    { big: "5 sec", was: "was: 12 min on hold", label: "to get an answer" },
+    { big: "100%", was: "every answer", label: "shows where it came from" },
+    { big: "0", was: "guesses on medical questions", label: "handed to a person instead" },
+  ],
+  trustTitle: "Why people can trust it",
+  trust: [
+    "Every answer points to the exact place in the plan documents",
+    "It says “I don't know” rather than guessing",
+    "Personal details are hidden before anything is stored",
+  ],
+  nextTitle: "Next",
+  next: ["Pilot with 50 members", "Add claims status questions"],
+};
+
+// Words a non-technical reader shouldn't see. Matching is whole-word and case-insensitive.
+const JARGON = ["rag", "llm", "ai model", "embedding", "embeddings", "vector", "pgvector", "api", "agent",
+  "agents", "prompt", "token", "tokens", "chunk", "chunks", "retrieval", "inference", "pipeline", "eval",
+  "evals", "guardrail", "guardrails", "database", "supabase", "render", "docker", "claude", "latency",
+  "json", "backend", "frontend", "deploy", "endpoint", "model"];
+
+// ===== Rendering (no need to edit) =====
+const el = (tag, text, cls) => Object.assign(document.createElement(tag), { textContent: text, className: cls || "" });
+document.querySelectorAll("[data-k]").forEach(n => { n.textContent = page[n.dataset.k] ?? ""; });
+document.querySelectorAll("[data-list]").forEach(n => (page[n.dataset.list] || []).forEach(t => n.append(el("li", t))));
+const nums = document.querySelector("[data-numbers]");
+for (const x of page.numbers || []) {
+  const card = el("div", "", "num");
+  card.append(el("div", x.big, "big"), el("div", x.was, "was"), el("div", x.label, "label"));
+  nums.append(card);
+}
+const text = document.querySelector(".slide").innerText.toLowerCase();
+const hits = JARGON.filter(w => new RegExp(`(^|[^a-z])${w}([^a-z]|$)`).test(text));
+if (hits.length) {
+  const b = document.getElementById("jargon");
+  b.textContent = `Technical words on a non-technical page: ${hits.join(", ")}`;
+  b.style.display = "block";
+}
+</script>
+</body>
+</html>

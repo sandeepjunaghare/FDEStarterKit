@@ -403,3 +403,25 @@ Done 2026-10-03.
   with correctly shaped fakes and the real exit code.
 - False positive: the fake `s3cretPw` URL in api/tests → allowlisted that exact value, not the folder.
 - Limit: CI catches a leak *after* the push. True prevention is a local pre-commit hook (not added).
+
+---
+
+# Task: README Handoff + non-technical visual template (approved in chat)
+
+Done 2026-10-03.
+
+- [x] README `## Handoff`: what you're getting, who owns what (golden set owned by the client's domain
+      expert), changing it safely (eval before/after), what to watch first, known limits/Release 2,
+      "if two engineers picked this up". Scenario fields as `<placeholders>` for pane D.
+- [x] `docs/visual/one-page.html`: 16:9 one-pager, before/after, 3 numbers, trust + next; edit only the
+      `page` object; on-screen red banner when jargon appears. Example content = fictional health plan.
+- [x] CLAUDE.md map entry.
+
+## Review
+
+- Rendered with headless Chrome and looked at it: desktop 16:9 clean; jargon test ("vector database")
+  shows the banner naming both words. Reworded the awkward third number card.
+- Added rule: numbers not measured during the build are labelled as targets (example numbers are invented).
+- Phone check: screenshot looked clipped, but measuring in-page showed headless Chrome's 500 px minimum
+  layout width cropped to 390 px — no real overflow (doc width == viewport at 500/800). The minmax(0,1fr)
+  change stays as a safeguard. A true 390 px check needs a real device or DevTools emulation.
