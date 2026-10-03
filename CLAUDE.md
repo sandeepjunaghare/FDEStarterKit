@@ -25,7 +25,7 @@ api/                      # FastAPI service — Render web service; streams resp
   schemas/                # Pydantic I/O contracts for every agent — guardrails are enforced here, not in prompts
   guardrails/             # scope classifier, PII redaction, citation check, the one domain rule
   memory/                 # session memory (conversation) + persistent memory (user profile), scoped per user
-  rag/                    # embedding client (one hosted model; swap = one config line) + document ingestion
+  rag/                    # Voyage embedding client (EMBEDDING_MODEL/DIM; input_type document vs query) + ingestion
   db/                     # async psycopg pool (Supabase session pooler), check_db(), smoke_roundtrip()
     migrate.py            # applies migrations/*.sql once each, in name order: uv run python -m db.migrate
     migrations/           # numbered SQL files (0001_smoke.sql …) — the only way schema changes
@@ -43,6 +43,7 @@ scripts/
   check_db.py             # standalone Supabase + pgvector check: uv run --script scripts/check_db.py
   smoke.sh                # deploy smoke test for any URL: scripts/smoke.sh [base_url] [latest|sha] [--wait]
   copy-db-url.sh          # copies DATABASE_URL from .env for a dashboard, password masked in output
+  check_embeddings.py     # Voyage embedding check (dim = EMBEDDING_DIM, ranking): uv run --script scripts/check_embeddings.py
 docs/runbook-deploy.md    # deploy procedure, troubleshooting, rollback, password rotation
 docs/runbook-kickoff.md   # brief → PRD → architecture → tickets → 4 worktree panes, minute by minute
 docs/templates/           # discovery-notes.md: stakeholder questions mapped to PRD sections
@@ -52,6 +53,7 @@ docs/tickets/<slug>.md    # (per scenario) 4 parallel tickets, one per pane — 
 .claude/skills/pane/      # /pane <A|B|C|D> <ticket>: PIV loop for one pane, stops for review after planning
 .claude/plans/ reports/   # plans and implementation reports written by the PIV skills (committed)
 .worktreeinclude          # gitignored files /worktree-create copies into each worktree (.env, course skills)
+.gitleaks.toml            # secret-scan rules (CI): defaults + Anthropic any-prefix, Voyage, Postgres URL with password
 render.yaml               # Render Blueprint: Docker, virginia, /health, deploys after CI passes, DATABASE_URL set in dashboard
 .github/workflows/ci.yml  # CI: ruff + pyright + unit tests, Docker build, integration (only if DATABASE_URL secret set)
 docker-compose.yml        # local parity check: api now, ui when it exists (the DB is Supabase cloud, not a container)
@@ -73,7 +75,7 @@ own worktree via `/pane`, which owns disjoint folders; shared files (`api/main.p
 | Deployment | `render.yaml`, `api/Dockerfile`, `scripts/smoke.sh`, `docs/runbook-deploy.md` | verified: push → CI → auto-deploy (~35 s) → smoke OK; clean-slate deploy rehearsed in 1:29 |
 | GitHub | `README.md`, `.github/workflows/ci.yml` | built |
 | Vector DB | `api/db/`, `api/db/migrations/` | connection + smoke table built; documents/chunks table planned |
-| Embedding model | `api/rag/`, `EMBEDDING_*` in `.env` | planned; model not chosen (fixes vector size) |
+| Embedding model | `api/rag/`, `EMBEDDING_*` + `VOYAGE_API_KEY` in `.env` | chosen + verified: voyage-4, 1024 dims → `vector(1024)` (`scripts/check_embeddings.py`); rag/ client planned |
 | Multi-agent orchestration | `api/agents/` | planned |
 | Framework | `api/main.py` (FastAPI) | FastAPI built; Agent SDK planned |
 | Memory | `api/memory/` | planned |
@@ -84,7 +86,7 @@ own worktree via `/pane`, which owns disjoint folders; shared files (`api/main.p
 ## Ground rules
 - **Python:** 3.12 via uv; add deps with `uv add` (never pip). `ruff check`, `ruff format --check` and `pyright` must be clean before a commit.
 - **Types:** every agent input/output is a Pydantic model in `api/schemas/`; guardrails validate those models in code.
-- **Config:** read settings only through `config.get_settings()`; never `os.environ` elsewhere. Secrets live in env only; add new keys to `.env.example`.
+- **Config:** read settings only through `config.get_settings()`; never `os.environ` elsewhere. Secrets live in `.env` only; add new keys to `.env.example` **with empty values** (CI secret scan fails the build otherwise).
 - **Database:** async psycopg pool from `app.state.pool`; SQL lives in `api/db/`. Schema changes only as a new numbered file in `api/db/migrations/`, never edits to an applied one. Every table runs `enable row level security` (no policies): Supabase's public REST API must not reach our tables.
 - **Errors:** fail fast with specific exceptions; public responses name the error class only, full detail goes to logs.
 - **Testing:** unit tests stub the DB and run offline; anything touching Supabase is `@pytest.mark.integration`.
@@ -103,7 +105,8 @@ own worktree via `/pane`, which owns disjoint folders; shared files (`api/main.p
 - migrate: `cd api && uv run python -m db.migrate` (local and Render share one Supabase DB, so run it once from here)
 - smoke: `scripts/smoke.sh` (local) · `scripts/smoke.sh https://fde-api.onrender.com latest --wait` (Render; waits until the live api/ code matches HEAD)
 - copy DATABASE_URL for a dashboard: `scripts/copy-db-url.sh` · full deploy procedure: `docs/runbook-deploy.md`
-- DB check without the API: `uv run --script scripts/check_db.py`
+- DB check without the API: `uv run --script scripts/check_db.py` · embeddings: `uv run --script scripts/check_embeddings.py`
+- secret scan: `docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:v8.30.1 git /repo --config /repo/.gitleaks.toml --redact`
 - lint + format: `cd api && uv run ruff check --fix . ../scripts && uv run ruff format . ../scripts`
 - type-check: `cd api && uv run pyright` (standard mode; api/ only — scripts/ are standalone uv scripts)
 - evals: `cd evals && uv run python run.py golden/<scenario>.yaml [--target URL|fake] [--only ids] [--compare results/x.json]` · checks: `cd evals && uv run ruff check . && uv run pyright && uv run pytest`

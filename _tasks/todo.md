@@ -380,3 +380,26 @@ Built 2026-10-03. evals: ruff/format/pyright clean, 23 unit tests pass, `--targe
   no credentials the SDK raises TypeError at request time (not AuthenticationError) → crashed the run. Now a
   judge error with the fix in the message, and the run fails (exit 1) instead of looking green.
 - Design change: /ask returns `action` only (no separate `refused` flag, which could contradict it).
+
+---
+
+# Task: Voyage embeddings + CI secret scan (approved in chat)
+
+Done 2026-10-03.
+
+- [x] Embedding model chosen and verified live: Voyage `voyage-4`, 1024 dims (→ `vector(1024)`), $0.06/1M,
+      200M free; payment method added (lifts the no-card rate limits; free tokens still apply).
+      `scripts/check_embeddings.py`: config → embed (document/query) → dimension → ranking. PASS, 59 tokens.
+- [x] `.env.example`: EMBEDDING_MODEL=voyage-4, EMBEDDING_DIM=1024, VOYAGE_API_KEY= (empty); tech-stack row,
+      CLAUDE.md (map, rubric row, commands, ground rule), README updated.
+- [x] Secret scan: `.gitleaks.toml` + CI `secrets` job (gitleaks v8.30.1, full history).
+
+## Review
+
+- Tested the scanner both ways before trusting it. Gaps found against the real .env: the built-in Anthropic
+  rule only knows `sk-ant-api03-…` (our key uses a newer prefix → missed); no Voyage rule; no Postgres-URL
+  rule. Added all three; now all 4 real secrets are caught (Langfuse public key isn't a secret).
+- First decoy test "passed" only because the decoy was malformed and `tail` masked the exit code; re-tested
+  with correctly shaped fakes and the real exit code.
+- False positive: the fake `s3cretPw` URL in api/tests → allowlisted that exact value, not the folder.
+- Limit: CI catches a leak *after* the push. True prevention is a local pre-commit hook (not added).

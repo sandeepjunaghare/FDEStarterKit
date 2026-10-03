@@ -36,7 +36,7 @@ flowchart LR
 | Orchestration | Planner → Retriever → Answerer → Critic | Each agent has one job; the critic is the last gate before the user |
 | Framework | Claude Agent SDK, FastAPI with SSE | Outputs are checked against Pydantic schemas, so guardrails live in code, not prompts |
 | Vector DB | pgvector on Supabase | One managed Postgres holds vectors and user memory, identical locally and on Render |
-| Embeddings | One hosted model (dimension and cost stated in config) | Hosted beats local for a prototype; swapping is one config line |
+| Embeddings | Voyage AI `voyage-4`, 1024 dims, $0.06/1M tokens (200M free) | Anthropic's recommended provider; 1024 fits a pgvector HNSW index; swapping is one config line |
 | Memory | Session (conversation) + persistent (user profile in Postgres) | Two layers, scoped per user, both visible in the UI |
 | Guardrails | Pydantic schemas, scope classifier, PII redaction, required citations, out-of-scope refusal, one domain rule | The cost of a wrong answer decides how strict to be |
 | Front end | Streamlit | Fastest path to a usable chat UI with citations and memory on screen |
@@ -56,6 +56,7 @@ ui/                   Streamlit app (second Render service)       ⏳ planned
 evals/                golden set + eval runner                    ⏳ planned
 scripts/check_db.py   standalone Supabase + pgvector check        ✅ built
 scripts/smoke.sh      deploy smoke test for any URL               ✅ built
+scripts/check_embeddings.py  Voyage embedding check (voyage-4, 1024)  ✅ built
 render.yaml           Render Blueprint                            ✅ built
 docker-compose.yml    local container run                         ✅ built
 ```
@@ -150,6 +151,8 @@ uv run pyright                           # type-check (standard mode)
 |---|---|
 | Lint, type-check, unit tests | ruff check, ruff format --check, pyright, pytest |
 | Docker build | builds `api/Dockerfile` (no push), so a broken image fails before Render deploys it |
+| Secret scan | gitleaks over the full history (`.gitleaks.toml`), so a key pasted into a tracked file fails the build |
+| Evals harness | lint, types, tests and a self-test of `evals/` on the fake pipeline |
 | Integration tests | `pytest -m integration` against Supabase. Runs only if the `DATABASE_URL` repo secret is set |
 
 To enable integration tests in CI: **Settings → Secrets and variables → Actions → New repository secret**, name `DATABASE_URL`, value = the session-pooler URL.
