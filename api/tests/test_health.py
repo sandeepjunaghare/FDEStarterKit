@@ -1,9 +1,11 @@
 import psycopg
 import pytest
 from fastapi.testclient import TestClient
+from psycopg.errors import UndefinedTable
 from psycopg_pool import PoolTimeout
 
 import main
+from db import SmokeCheckError
 
 
 @pytest.fixture
@@ -55,8 +57,45 @@ def test_health_db_unreachable_hides_details(client, monkeypatch, err):
     assert "supabase" not in r.text
 
 
-@pytest.mark.integration
-def test_health_db_against_supabase():
+def stub_smoke(monkeypatch, result=0.0, raises=None):
+    async def fake(_pool):
+        if raises:
+            raise raises
+        return result
+
+    monkeypatch.setattr(main, "smoke_roundtrip", fake)
+
+
+def test_smoke_ok(client, monkeypatch):
+    stub_smoke(monkeypatch, result=0.0)
+    r = client.post("/smoke")
+    assert r.status_code == 200
+    assert r.json() == {
+        "smoke": "ok",
+        "write": "ok",
+        "read": "ok",
+        "vector_search": "ok",
+        "distance": 0.0,
+    }
+
+
+@pytest.mark.parametrize(
+    "err",
+    [UndefinedTable('relation "smoke_checks" does not exist'), SmokeCheckError("wrong row")],
+)
+def test_smoke_failure_is_503_with_class_only(client, monkeypatch, err):
+    stub_smoke(monkeypatch, raises=err)
+    r = client.post("/smoke")
+    assert r.status_code == 503
+    assert r.json() == {"smoke": "error", "detail": type(err).__name__}
+
+
+def test_smoke_rejects_get(client):
+    assert client.get("/smoke").status_code == 405
+
+
+@pytest.fixture
+def live_client():
     """Real lifespan + pool against DATABASE_URL (env or repo-root .env)."""
     from pydantic import ValidationError
 
@@ -67,6 +106,19 @@ def test_health_db_against_supabase():
     except ValidationError:
         pytest.skip("DATABASE_URL not set")
     with TestClient(main.app) as c:
-        r = c.get("/health/db")
+        yield c
+
+
+@pytest.mark.integration
+def test_health_db_against_supabase(live_client):
+    r = live_client.get("/health/db")
     assert r.status_code == 200, r.text
     assert r.json()["db"] == "ok"
+
+
+@pytest.mark.integration
+def test_smoke_against_supabase(live_client):
+    """Needs migrations applied (uv run python -m db.migrate)."""
+    r = live_client.post("/smoke")
+    assert r.status_code == 200, r.text
+    assert r.json()["distance"] == pytest.approx(0.0)

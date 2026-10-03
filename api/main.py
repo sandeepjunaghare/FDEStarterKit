@@ -8,7 +8,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from config import get_settings
-from db import check_db, create_pool
+from db import SmokeCheckError, check_db, create_pool, smoke_roundtrip
 
 log = logging.getLogger("api")
 
@@ -45,3 +45,17 @@ async def health_db(request: Request) -> JSONResponse:
     if version is None:
         return JSONResponse({"db": "ok", "pgvector": "missing"}, status_code=503)
     return JSONResponse({"db": "ok", "pgvector": version})
+
+
+@app.post("/smoke")
+async def smoke(request: Request) -> JSONResponse:
+    """Deploy smoke test: write, read and vector-search a row on a real table, then roll back."""
+    try:
+        distance = await smoke_roundtrip(request.app.state.pool)
+    except (psycopg.Error, SmokeCheckError) as e:
+        log.warning("smoke failed: %r", e)
+        # UndefinedTable here means migrations haven't run: uv run python -m db.migrate
+        return JSONResponse({"smoke": "error", "detail": type(e).__name__}, status_code=503)
+    return JSONResponse(
+        {"smoke": "ok", "write": "ok", "read": "ok", "vector_search": "ok", "distance": distance}
+    )

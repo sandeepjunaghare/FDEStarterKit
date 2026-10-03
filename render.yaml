@@ -1,0 +1,19 @@
+# Render Blueprint: Render → New → Blueprint → pick this repo. Spec: https://render.com/docs/blueprint-spec
+# The DB is Supabase (not Render); run migrations from your machine first: cd api && uv run python -m db.migrate
+services:
+  - type: web
+    name: fde-api
+    runtime: docker
+    plan: free
+    region: virginia # closest to Supabase us-east-1
+    branch: main
+    dockerfilePath: ./api/Dockerfile
+    dockerContext: ./api
+    healthCheckPath: /health # liveness only; never blocked by a DB blip
+    autoDeployTrigger: checksPass # deploy only after GitHub CI is green
+    buildFilter:
+      paths:
+        - api/**
+    envVars:
+      - key: DATABASE_URL # Supabase session pooler URL; entered in the dashboard, never committed
+        sync: false

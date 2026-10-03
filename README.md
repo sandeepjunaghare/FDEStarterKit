@@ -47,14 +47,16 @@ Full decision log: [`research/tech-stack.md`](research/tech-stack.md).
 
 ```
 api/                  FastAPI service (Render web service)
-  main.py             app, DB pool lifespan, health routes        ✅ built
+  main.py             app, DB pool lifespan, health + smoke routes ✅ built
   config.py           settings from environment                   ✅ built
-  db/                 async psycopg pool + DB health probe        ✅ built
+  db/                 pool, health probe, smoke, SQL migrations   ✅ built
   tests/              pytest (unit + Supabase integration)        ✅ built
   agents/ schemas/ guardrails/ memory/ rag/                       ⏳ planned
 ui/                   Streamlit app (second Render service)       ⏳ planned
 evals/                golden set + eval runner                    ⏳ planned
-scripts/check_db.py   standalone Supabase + pgvector smoke test   ✅ built
+scripts/check_db.py   standalone Supabase + pgvector check        ✅ built
+scripts/smoke.sh      deploy smoke test for any URL               ✅ built
+render.yaml           Render Blueprint                            ✅ built
 docker-compose.yml    local container run                         ✅ built
 ```
 
@@ -70,12 +72,11 @@ docker-compose.yml    local container run                         ✅ built
 
 ### 1. Configure
 
-Create `.env` in the repo root (it is gitignored):
-
 ```bash
-# Supabase → Connect → Direct → Session pooler (port 5432). URL-encode special characters in the password.
-DATABASE_URL='postgresql://postgres.<project-ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres?sslmode=require'
+cp .env.example .env   # .env is gitignored
 ```
+
+Set `DATABASE_URL` (Supabase → Connect → Direct → **Session pooler**, port 5432). The other keys in [`.env.example`](.env.example) are only needed as the agents, evals and UI land.
 
 Use the **session pooler**, not the direct connection: the direct host is IPv6-only on the free plan and fails from Docker and Render.
 
@@ -87,7 +88,15 @@ uv run --script scripts/check_db.py
 
 Expected: `PASS` for connect, extension and a vector round-trip, then `OK: Supabase + pgvector ready`.
 
-### 3. Start the API
+### 3. Apply migrations
+
+```bash
+cd api && uv run python -m db.migrate
+```
+
+Applies each file in `api/db/migrations/` once, in order (re-running is a no-op). Local and Render share the same Supabase database, so this only ever runs from your machine. Every table has row-level security enabled, which keeps it out of Supabase's public REST API.
+
+### 4. Start the API
 
 ```bash
 cd api
@@ -101,14 +110,19 @@ Or in Docker, from the repo root:
 docker compose up --build
 ```
 
-### 4. Verify
+### 5. Verify
 
 ```bash
-curl localhost:8000/health      # {"status":"ok"}                     process is up
-curl localhost:8000/health/db   # {"db":"ok","pgvector":"0.8.2"}      Supabase + pgvector ready
+scripts/smoke.sh            # defaults to http://localhost:8000
 ```
 
-`/health/db` returns **503** with the error type if the database is unreachable or pgvector is missing. The API still starts in that case, so the failure is reported rather than crash-looping.
+| Check | Route | Proves |
+|---|---|---|
+| health | `GET /health` | the process is up |
+| health/db | `GET /health/db` | Supabase is reachable and pgvector is installed |
+| smoke | `POST /smoke` | insert, read-back and vector similarity search on a real table, in one transaction that is rolled back, so nothing persists |
+
+Failures return **503** with the error class only (`UndefinedTable` means migrations haven't run). The API still starts when the database is down, so the failure is reported rather than crash-looping.
 
 ### Tests
 
@@ -158,36 +172,36 @@ To enable integration tests in CI: **Settings → Secrets and variables → Acti
 
 ## Deploy
 
-Render builds the Docker image itself from this repo on every push to `main`. Nothing is built or uploaded from your machine.
+Render builds the Docker image from this repo itself; nothing is built or uploaded from your machine. The service is defined in [`render.yaml`](render.yaml) (a Render Blueprint).
 
 ```
-local: docker compose up   →   git push   →   Render builds api/Dockerfile   →   public https URL
+local: scripts/smoke.sh   →   git push   →   CI green   →   Render builds api/Dockerfile   →   scripts/smoke.sh <url>
 ```
 
-### API service (one-time setup)
+### One-time setup
 
-1. Render → **New → Web Service** → connect this GitHub repo.
-2. Settings:
+1. Apply migrations from your machine (see Run → step 3).
+2. Render → **New → Blueprint** → connect this GitHub repo. Render reads `render.yaml`:
 
    | Setting | Value |
    |---|---|
-   | Language | Docker |
-   | Branch | `main` |
-   | Root Directory | `api` |
-   | Health Check Path | `/health` |
-   | Environment variable | `DATABASE_URL` (the same session-pooler URL as `.env`) |
+   | Service | `fde-api`, Docker, free plan, region `virginia` (next to Supabase us-east-1) |
+   | Build | `api/Dockerfile`, context `api/` |
+   | Health check | `/health` |
+   | Auto-deploy | after GitHub checks pass, only when `api/**` changes |
+   | `DATABASE_URL` | entered when prompted: the same session-pooler URL as `.env`; never committed |
 
-3. Create the service, then verify:
+3. When the deploy is live:
 
    ```bash
-   curl https://<your-service>.onrender.com/health/db
+   scripts/smoke.sh https://<your-service>.onrender.com
    ```
 
-After that, every `git push` to `main` redeploys.
+After that, every push to `main` that touches `api/` redeploys once CI is green.
 
 **Notes**
 
-- `/health` never touches the database, so a Supabase blip can't block a deploy. Use `/health/db` to check the data path.
+- `/health` never touches the database, so a Supabase blip can't block a deploy. `scripts/smoke.sh` checks the data path.
 - The container listens on Render's `$PORT` (default 8000 locally) and runs as a non-root user.
-- Free instances sleep when idle. The first request after a pause can take 30–60 s, so warm the URL before a demo.
-- The Streamlit UI will deploy as a second web service (root directory `ui`), with `API_URL` pointing at this one.
+- Free instances sleep when idle. The first request after a pause can take 30–60 s (the smoke script waits up to 90 s), so warm the URL before a demo.
+- The Streamlit UI will be a second service in `render.yaml`, with `API_URL` pointing at this one.

@@ -102,11 +102,85 @@ Done 2026-10-02. ruff clean, format clean, pyright 0 errors; unit 5/5, integrati
 
 ## Plan
 
-- [ ] `.github/workflows/ci.yml`
-- [ ] Validate the YAML locally (actionlint if available), then push and watch the first run with `gh run watch`
-- [ ] `README.md` — CI badge + note on the optional `DATABASE_URL` secret
-- [ ] `CLAUDE.md` — map entry for `.github/workflows/ci.yml`
+- [x] `.github/workflows/ci.yml`
+- [x] Validate the YAML locally (actionlint if available), then push and watch the first run with `gh run watch`
+- [x] `README.md` — CI badge + note on the optional `DATABASE_URL` secret
+- [x] `CLAUDE.md` — map entry for `.github/workflows/ci.yml`
 
 ## Verification
 
-- [ ] First CI run on GitHub: `check` and `docker` green; `integration` skipped (no secret yet)
+- [x] First CI run on GitHub: `check` and `docker` green; `integration` skipped (no secret yet)
+
+## Review
+
+Done 2026-10-03. Run 37095897012 green: check ✅, docker ✅, integration ✅ (skip path; no secret yet).
+
+- Worked: actionlint (via Docker) clean before pushing; step-level `env.DATABASE_URL` guard skips cleanly.
+- Didn't: first run (596403e) failed at job setup: `astral-sh/setup-uv@v10` doesn't exist. setup-uv
+  publishes only exact tags (v10.2.0), no moving major tag, and actionlint doesn't check that remote tags exist.
+  Fixed in a763535 by pinning to the v10.2.0 commit SHA.
+- Improve: check `git/ref/tags/<major>` for every action before pushing, or pin all actions by SHA
+  (with a comment naming the version) and let Dependabot bump them.
+
+---
+
+# Task: deploy readiness (render.yaml + smoke endpoint) and kit quick fixes
+
+## Decisions (assumptions — confirm or change)
+
+- **Migrations:** plain numbered SQL files in `api/db/migrations/` + a ~40-line runner
+  (`uv run python -m db.migrate`) that records applied files in `schema_migrations`. Reused live for
+  documents/chunks/memory tables. Run from your machine: local and Render share one Supabase DB, and
+  Render's pre-deploy command is paid-only.
+- **Every table enables RLS** (no policies). Supabase exposes `public` tables through its REST API with
+  the anon key; RLS blocks that, while our `postgres` connection (table owner) is unaffected.
+- **`POST /smoke`:** in ONE transaction: insert a row with a vector → read it back → pgvector similarity
+  query on the table → **roll back**. Proves write/read/vector permissions on a real table, leaves nothing
+  behind, so the public endpoint can't be used to fill the DB. 503 on failure (error class only).
+- **`render.yaml` (Blueprint):** one web service, Docker, `dockerfilePath: ./api/Dockerfile`,
+  `dockerContext: ./api`, health check `/health`, region `virginia` (next to Supabase us-east-1),
+  free plan, auto-deploy on `main` only when `api/**` changes, `DATABASE_URL` as `sync: false`
+  (entered in the dashboard, never in git).
+- **`scripts/smoke.sh [base_url]`:** curls `/health`, `/health/db`, `POST /smoke`; default localhost:8000.
+  Same command for local, Docker and Render; prints elapsed time for the rehearsal log.
+- **`.gitignore`:** stop ignoring all of `.claude/`; ignore the course's exact paths instead (36 skill
+  dirs, 6 agents, references, hooks, examples, template files), generated from the course clone.
+  `.agents/`, `.archon/`, `tooling/`, `.mcp.json` stay fully ignored. Add `.claude/settings.local.json`.
+- **`.env.example`:** DATABASE_URL (required), ANTHROPIC_API_KEY, LANGFUSE_* , EMBEDDING_* placeholders;
+  SUPABASE_URL/SUPABASE_KEY listed as optional (only needed for supabase-py/Storage).
+- **`CLAUDE.md`:** add Ground rules (from what is already decided: uv/3.12, ruff+pyright clean, Pydantic I/O,
+  config only via config.py, numbered SQL migrations, RLS on every table, secrets only in env),
+  Working principles (from PREP_PLAN: review every diff, no untried libraries, narrow restarts),
+  commit rule (every ~20 min, conventional prefix + rubric item), and a rubric map (item → where → status).
+
+## Plan
+
+- [x] `api/db/migrate.py` + `api/db/migrations/0001_smoke.sql`
+- [x] `api/db/__init__.py` — `smoke_roundtrip()`; `api/main.py` — `POST /smoke`
+- [x] `api/tests/test_health.py` — unit tests for `/smoke` (ok + 503), integration test against Supabase
+- [x] `render.yaml`, `scripts/smoke.sh`
+- [x] `.env.example`, `.gitignore`
+- [x] `CLAUDE.md` (ground rules, working principles, commit rule, rubric map, map entries)
+- [x] `README.md` — Deploy via Blueprint, migrations step, smoke script
+
+## Verification
+
+- [x] ruff, format, pyright clean; unit + integration tests pass
+- [x] migrate runs against Supabase; re-run is a no-op; RLS enabled on `smoke_checks`
+- [x] `scripts/smoke.sh` green locally and in Docker; table still empty afterwards
+- [x] `git status` shows no course files after the .gitignore change
+- [ ] (you) Render: New → Blueprint → set DATABASE_URL → `scripts/smoke.sh https://<api>.onrender.com`; time it, twice
+
+## Review
+
+Done 2026-10-03 (local). ruff/format/pyright clean; unit 9/9; integration 2/2; actionlint + shellcheck clean;
+`scripts/smoke.sh` PASS locally and in Docker; `smoke_checks` has 0 rows afterwards; migrate re-run is a no-op.
+
+- Worked: running the integration test *before* migrating confirmed the 503 `UndefinedTable` path against the
+  real DB. Checked Render's Blueprint spec (autoDeployTrigger, buildFilter.paths) instead of writing it from
+  memory, after the setup-uv@v10 miss.
+- Found: Supabase already has `schema_migrations` in `auth` and `realtime`, so the runner now names
+  `public.schema_migrations` explicitly. smoke.sh's first failure hint blamed migrations for an
+  unreachable server; it now maps each failure ([000] / UndefinedTable / PoolTimeout) to its fix.
+- .gitignore: 48 exact course paths instead of all of `.claude/`; own skills under `.claude/` are now tracked.
+- Pending (you): push → Render New → Blueprint → DATABASE_URL → `scripts/smoke.sh <url>`; time it, twice.
