@@ -241,3 +241,17 @@ Done 2026-10-03 (approved in chat; 2 new files + 2 link edits).
   push that doesn't touch api/, because buildFilter skips the redeploy. And after a clean-slate Blueprint the
   live commit is HEAD, so "last api/ commit" isn't right either. Fix: `smoke.sh <url> latest` compares the
   live commit's api/ tree with HEAD's. Lesson: test documented commands against the state *after* the push.
+
+---
+
+# Task: smoke.sh --wait + deployment status (approved in chat)
+
+Done 2026-10-03. Rehearsals: 2 = 8:01, 3 = 1:29 (copy-db-url + history-recalled wait loop).
+
+- [x] `scripts/smoke.sh ... --wait`: polls until /health answers AND the expected code is live (old deploy
+      stays healthy during a rebuild), gives up after SMOKE_WAIT_SECONDS (300). Tested 6 cases incl. timeout,
+      server appearing mid-wait, flag in any position, unchanged behaviour without the flag.
+- [x] Runbook timed steps reduced to 5 (wait replaces watch-log + copy-URL); README, CLAUDE.md updated;
+      Deployment rubric row = verified, rehearsed 1:29.
+- Note: first Write of smoke.sh was rejected (file changed since the tool last read it, because the previous
+  edit went through python). Checked git diff (clean) before re-reading and overwriting.
