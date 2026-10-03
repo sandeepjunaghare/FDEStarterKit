@@ -1,0 +1,20 @@
+# Gitignored files every worktree needs, copied from the main checkout by /worktree-create.
+# Only paths that `git check-ignore` confirms are ignored get copied; tracked files come from git.
+
+# Secrets: DATABASE_URL and the other keys
+.env
+
+# Course AI layer (local-only by license). Without these, a pane has no PIV skills.
+# Under .claude/, copy only the ignored course paths; our own .claude files are tracked.
+.claude/skills/
+.claude/agents/
+.claude/references/
+.claude/hooks/
+.claude/examples/
+.claude/CLAUDE.md.template
+.claude/settings.json.example
+.claude/mcp-posthog-headers.sh
+.agents/
+.archon/
+.mcp.json
+tooling/

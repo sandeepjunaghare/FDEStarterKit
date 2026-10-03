@@ -41,6 +41,14 @@ scripts/
   smoke.sh                # deploy smoke test for any URL: scripts/smoke.sh [base_url] [latest|sha] [--wait]
   copy-db-url.sh          # copies DATABASE_URL from .env for a dashboard, password masked in output
 docs/runbook-deploy.md    # deploy procedure, troubleshooting, rollback, password rotation
+docs/runbook-kickoff.md   # brief → PRD → architecture → tickets → 4 worktree panes, minute by minute
+docs/templates/           # discovery-notes.md: stakeholder questions mapped to PRD sections
+docs/<slug>.prd.md        # (per scenario) the what/why — /plan-create-prd
+docs/architecture.md      # (per scenario) the how — /plan-architecture
+docs/tickets/<slug>.md    # (per scenario) 4 parallel tickets, one per pane — /piv-slice-epic
+.claude/skills/pane/      # /pane <A|B|C|D> <ticket>: PIV loop for one pane, stops for review after planning
+.claude/plans/ reports/   # plans and implementation reports written by the PIV skills (committed)
+.worktreeinclude          # gitignored files /worktree-create copies into each worktree (.env, course skills)
 render.yaml               # Render Blueprint: Docker, virginia, /health, deploys after CI passes, DATABASE_URL set in dashboard
 .github/workflows/ci.yml  # CI: ruff + pyright + unit tests, Docker build, integration (only if DATABASE_URL secret set)
 docker-compose.yml        # local parity check: api now, ui when it exists (the DB is Supabase cloud, not a container)
@@ -49,6 +57,11 @@ research/tech-stack.md    # stack decisions + one-line defenses — the source f
 ```
 
 External services (not in the repo): Supabase (Postgres + pgvector), Anthropic API, hosted embedding model, Langfuse, Render.
+
+## How work flows
+What before how: PRD → architecture → tickets (`docs/runbook-kickoff.md`), then each ticket runs the PIV loop in its
+own worktree via `/pane`, which owns disjoint folders; shared files (`api/main.py`, `api/config.py`,
+`api/pyproject.toml`, `api/uv.lock`, `.env.example`, `CLAUDE.md`) belong to pane A. Validate with `/piv-validate`.
 
 ## Rubric map
 

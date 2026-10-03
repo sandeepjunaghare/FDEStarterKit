@@ -255,3 +255,74 @@ Done 2026-10-03. Rehearsals: 2 = 8:01, 3 = 1:29 (copy-db-url + history-recalled 
       Deployment rubric row = verified, rehearsed 1:29.
 - Note: first Write of smoke.sh was rejected (file changed since the tool last read it, because the previous
   edit went through python). Checked git diff (clean) before re-reading and overwriting.
+
+---
+
+# Task: align the kit with the course's stage 1 method (what → how → slices → PIV per pane)
+
+Flow on the day (course defaults, decided in chat):
+discovery with the architect → `/plan-create-prd` → `docs/<slug>.prd.md` (what/why) →
+`/plan-architecture` → `docs/architecture.md` (how) → `/piv-slice-epic` → `docs/tickets/<slug>.md`
+(4 parallel tickets) → `/worktree-create` (4 worktrees) → each pane runs the PIV loop on one ticket →
+`/worktree-merge`. Deferred: stage 2/3, epic research (1.10), PR flow, `piv-run-full-loop`.
+
+## Decisions (assumptions — confirm or change)
+
+- **Course files stay local.** Edits to course skills (piv-validate) are gitignored and never published.
+  Our own files (templates, runbook, `/pane` skill, `.worktreeinclude`) are committed.
+- **Discovery template maps questions to PRD sections**, so the architect conversation *is* the PRD
+  interview; its notes file is passed to `/plan-create-prd` as the reference doc.
+- **`tech-stack.md` is passed to `/plan-architecture` as the reference doc**, so the session only decides
+  scenario-specific choices (chunking + schema, domain guardrail rule, memory scope, golden eval set).
+- **Slicing is steered to 4 tickets that own disjoint folders**, one per pane:
+  A `api/agents/ api/schemas/ api/guardrails/ api/memory/` · B `api/rag/ api/db/migrations/ evals/` ·
+  C `ui/` · D `README.md docs/ render.yaml` (+ visual). Disjoint folders keep `/worktree-merge` clean.
+- **One own skill `/pane <A|B|C|D> <ticket>`** instead of four prompt files: one thing to remember; each
+  pane's folder ownership lives in it. It runs the PIV steps with gates, never `piv-run-full-loop`:
+  plan (`/piv-plan-implementation`, codebase-only, skip external research unless an API is unknown,
+  time-box ~10 min) → **STOP for human review** → `/piv-implement` → `/piv-validate` → `/piv-commit`
+  (message names the rubric item) → report.
+- **`.worktreeinclude`** lists the gitignored files each worktree needs: `.env` + the course layer
+  (`.claude/` course paths, `.agents/`, `.mcp.json`, `tooling/`). Without it, panes have no PIV skills.
+  Add `worktrees/` to `.gitignore`.
+- **Plans/reports are committed** (`.claude/plans/`, `.claude/reports/`): evidence of the process in the
+  public repo. (Your call — flip to ignored if you prefer.)
+
+## Plan
+
+- [x] 1. `.claude/skills/piv-validate/SKILL.md` (local only): our 4 checks from `api/` — ruff check
+      (`. ../scripts`), ruff format --check, pyright, pytest; integration tests optional (`-m integration`)
+- [x] 2a. `docs/templates/discovery-notes.md`: discovery questions grouped by PRD section
+      (problem/users/evidence · data · cost of a wrong answer · PII/regulatory · success metric · non-goals)
+- [x] 2b. `docs/runbook-kickoff.md`: minute-by-minute kickoff with copy-ready commands (code blocks only):
+      `/plan-create-prd`, `/plan-architecture`, `/piv-slice-epic` (4-folder instruction), `/worktree-create`,
+      the four `/pane` launches, `/worktree-merge`; time boxes per step
+- [x] 3. `.claude/skills/pane/SKILL.md` (own, committed): `/pane <letter> <ticket>` as above
+- [x] 4. `.worktreeinclude` + `worktrees/` in `.gitignore`
+- [x] 5. CLAUDE.md: map entries (docs/templates, runbook-kickoff, /pane, .worktreeinclude) + one line on the flow
+
+## Verification
+
+- [x] `piv-validate` run here: reports PASS with our real commands (and FAIL if a check is broken)
+- [x] `/worktree-create` test branch: worktree has `.env` + course skills; `/pane` and `/piv-validate` resolve
+      there; remove the test worktree afterwards
+- [x] `git status`: no course files staged; own files tracked
+- [ ] Dry run of the kickoff (not timed): fake scenario → PRD → architecture → tickets, to check the three
+      skills accept the inputs and land files where the runbook says. Delete the generated docs after.
+
+## Review
+
+Done 2026-10-03, except the kickoff dry run (see below).
+
+- piv-validate: our 4 checks; verified PASS on the clean tree and ❌ on lint/types/unit with a deliberately
+  broken test file (moved out afterwards). Local only (gitignored), as intended.
+- /worktree-create test-pane (the course skill itself): 125 ignored files copied via `.worktreeinclude`
+  (.env, 36 course skills incl. customized piv-validate, .mcp.json, tooling); 0 tracked files duplicated;
+  uv sync OK; lint/pyright/unit PASS; integration PASS inside the worktree (so .env works). Worktree and
+  branch removed.
+- Found while building: shared files (api/main.py, config.py, pyproject.toml, uv.lock, .env.example,
+  CLAUDE.md) would conflict across worktrees → owned by pane A; other panes report "Needs from A".
+- Found: docs must be committed before /worktree-create (worktrees branch from HEAD) → step in the runbook.
+  Same reason /pane is absent from a worktree until it's committed.
+- Not done: the kickoff dry run (PRD → architecture → tickets on a fake scenario). Those skills interview
+  and gate on the user's answers, so it needs you at the keyboard; proposed as the first 40 minutes of Ex1.
