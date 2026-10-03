@@ -22,4 +22,5 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     """Load settings once; lazy so importing the app never requires DATABASE_URL."""
-    return Settings()
+    # Fields come from env/.env at runtime, which pyright can't see.
+    return Settings()  # pyright: ignore[reportCallIssue]

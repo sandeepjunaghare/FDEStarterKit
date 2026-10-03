@@ -70,7 +70,10 @@ def main() -> None:
             "select extversion from pg_extension where extname = 'vector'"
         ).fetchone()
         if not row:
-            fail("extension", "pgvector missing — run: create extension vector with schema extensions;")
+            fail(
+                "extension",
+                "pgvector missing — run: create extension vector with schema extensions;",
+            )
         print(f"PASS [extension] pgvector {row[0]}")
 
         register_vector(conn)

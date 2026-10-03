@@ -49,3 +49,40 @@ Done 2026-10-02. All local verification passed.
   unsandboxed.
 - Next: deploy to Render (Docker, root dir `api/`, health check path `/health`, env `DATABASE_URL`), then
   `curl https://<api>.onrender.com/health/db`. Add a linter/type-checker (ruff + pyright) to Commands.
+
+---
+
+# Task: ruff + pyright for lint and type-check
+
+## Decisions (assumptions — confirm or change)
+
+- Both as `api` dev dependencies (`uv add --dev ruff pyright`), config in `api/pyproject.toml`; no separate config files.
+- ruff: line length 100; rules `E, F, W, I` (pyflakes/pycodestyle/isort) + `B` (bugbear) + `UP` (pyupgrade)
+  + `ASYNC` (async pitfalls — relevant for the SSE/agent code) + `SIM`. Formatter: `ruff format`.
+- pyright: `standard` mode (strict is too noisy for psycopg/FastAPI stubs at prototype speed), Python 3.12,
+  uses `api/.venv`. Scope: `api/` (incl. tests).
+- `scripts/check_db.py` is a standalone uv script with its own deps: ruff lints/formats it; pyright skips it.
+- Fix whatever the first run reports; no rule ignores unless justified inline.
+
+## Plan
+
+- [x] `api/pyproject.toml` — dev deps + `[tool.ruff]` + `[tool.pyright]` (uv.lock updates automatically)
+- [x] Run `ruff check --fix`, `ruff format`, `pyright`; fix remaining findings in code
+- [x] `CLAUDE.md` Commands — replace "type-check / lint: not set up yet"
+- [x] `README.md` Tests section — add the lint/type-check commands
+
+## Verification
+
+- [x] `uv run ruff check . ../scripts` and `uv run ruff format --check . ../scripts` clean (api + scripts)
+- [x] `uv run pyright` — 0 errors
+- [x] `uv run pytest` and `-m integration` still pass
+
+## Review
+
+Done 2026-10-02. ruff clean, format clean, pyright 0 errors; unit 5/5, integration 1/1, check_db.py OK.
+
+- Findings fixed: 2 long lines (wrapped by `ruff format` in tests/test_health.py and scripts/check_db.py);
+  1 pyright error — pydantic-settings `Settings()` gets `database_url` from env, invisible to pyright →
+  one inline `pyright: ignore[reportCallIssue]` with the reason.
+- Versions: ruff 0.16.10, pyright 1.1.414 (PyPI wrapper; downloads Node on first run).
+- Next: a pre-commit hook or CI job running the same three commands so they can't drift.

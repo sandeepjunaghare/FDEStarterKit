@@ -47,4 +47,5 @@ External services (not in the repo): Supabase (Postgres + pgvector), Anthropic A
 - test: `cd api && uv run pytest` (unit, no network) · `uv run pytest -m integration` (real Supabase)
 - run: `cd api && uv run uvicorn main:app --reload` · in Docker: `docker compose up --build`
 - DB smoke test: `uv run --script scripts/check_db.py`
-- type-check / lint: not set up yet
+- lint + format: `cd api && uv run ruff check --fix . ../scripts && uv run ruff format . ../scripts`
+- type-check: `cd api && uv run pyright` (standard mode; api/ only — scripts/ are standalone uv scripts)

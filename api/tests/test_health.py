@@ -44,7 +44,8 @@ def test_health_db_pgvector_missing(client, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "err", [PoolTimeout("couldn't get a connection"), psycopg.OperationalError("host db.x.supabase.co")]
+    "err",
+    [PoolTimeout("couldn't get a connection"), psycopg.OperationalError("host db.x.supabase.co")],
 )
 def test_health_db_unreachable_hides_details(client, monkeypatch, err):
     stub_check_db(monkeypatch, raises=err)

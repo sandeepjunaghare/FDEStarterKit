@@ -116,6 +116,15 @@ uv run pytest                  # unit tests, database stubbed, no network
 uv run pytest -m integration   # against the real Supabase in DATABASE_URL
 ```
 
+### Lint and type-check
+
+```bash
+cd api
+uv run ruff check . ../scripts           # lint (add --fix to auto-fix)
+uv run ruff format --check . ../scripts  # formatting
+uv run pyright                           # type-check (standard mode)
+```
+
 ---
 
 ## Eval
