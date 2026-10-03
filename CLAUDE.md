@@ -14,8 +14,8 @@ Request flow: `ui` → `POST /chat` (SSE) → planner → retriever → answerer
 ```
 api/                      # FastAPI service — Render web service; streams responses over SSE
   main.py                 # app + lifespan (DB pool) + routes: GET /health (liveness, Render's check),
-                          #   GET /health/db (Supabase + pgvector), POST /smoke (write/read/vector roundtrip,
-                          #   rolled back), POST /chat (SSE, planned)
+                          #   GET /version (deployed git commit), GET /health/db (Supabase + pgvector),
+                          #   POST /smoke (write/read/vector roundtrip, rolled back), POST /chat (SSE, planned)
   agents/                 # Claude Agent SDK pipeline — one job per agent, no shared side effects
     planner.py            # router: in-scope → retrieve; out-of-scope → refuse
     retriever.py          # embed query → pgVector top-k from Supabase
@@ -38,7 +38,7 @@ ui/                       # Streamlit app — second Render service; calls the A
 evals/                    # golden set (10–15 Q&A), retrieval hit rate, LLM-as-judge faithfulness → Langfuse
 scripts/
   check_db.py             # standalone Supabase + pgvector check: uv run --script scripts/check_db.py
-  smoke.sh                # deploy smoke test for any URL: scripts/smoke.sh [base_url]
+  smoke.sh                # deploy smoke test for any URL: scripts/smoke.sh [base_url] [expected_sha]
 render.yaml               # Render Blueprint: Docker, virginia, /health, deploys after CI passes, DATABASE_URL set in dashboard
 .github/workflows/ci.yml  # CI: ruff + pyright + unit tests, Docker build, integration (only if DATABASE_URL secret set)
 docker-compose.yml        # local parity check: api now, ui when it exists (the DB is Supabase cloud, not a container)
@@ -52,7 +52,7 @@ External services (not in the repo): Supabase (Postgres + pgvector), Anthropic A
 
 | Rubric item | Where | Status |
 |---|---|---|
-| Deployment | `render.yaml`, `api/Dockerfile`, `scripts/smoke.sh` | built; Render rehearsal pending |
+| Deployment | `render.yaml`, `api/Dockerfile`, `scripts/smoke.sh` | verified on Render: push → CI → auto-deploy (~35 s) → smoke OK; timed rehearsal 2 pending |
 | GitHub | `README.md`, `.github/workflows/ci.yml` | built |
 | Vector DB | `api/db/`, `api/db/migrations/` | connection + smoke table built; documents/chunks table planned |
 | Embedding model | `api/rag/`, `EMBEDDING_*` in `.env` | planned; model not chosen (fixes vector size) |
@@ -83,7 +83,8 @@ External services (not in the repo): Supabase (Postgres + pgvector), Anthropic A
 - test: `cd api && uv run pytest` (unit, no network) · `uv run pytest -m integration` (real Supabase)
 - run: `cd api && uv run uvicorn main:app --reload` · in Docker: `docker compose up --build`
 - migrate: `cd api && uv run python -m db.migrate` (local and Render share one Supabase DB, so run it once from here)
-- smoke: `scripts/smoke.sh` (local) · `scripts/smoke.sh https://<api>.onrender.com` (Render)
+- smoke: `scripts/smoke.sh` (local) · `scripts/smoke.sh https://fde-api.onrender.com "$(git rev-parse HEAD)"` (Render; fails until the pushed commit is live)
+- copy DATABASE_URL for a dashboard (no `KEY=`, no quotes, adds sslmode): `grep -m1 '^DATABASE_URL=' .env | cut -d= -f2- | tr -d "'\"" | sed '/sslmode=/!s/$/?sslmode=require/' | tr -d '\n' | pbcopy`
 - DB check without the API: `uv run --script scripts/check_db.py`
 - lint + format: `cd api && uv run ruff check --fix . ../scripts && uv run ruff format . ../scripts`
 - type-check: `cd api && uv run pyright` (standard mode; api/ only — scripts/ are standalone uv scripts)

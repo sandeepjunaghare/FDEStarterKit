@@ -119,6 +119,7 @@ scripts/smoke.sh            # defaults to http://localhost:8000
 | Check | Route | Proves |
 |---|---|---|
 | health | `GET /health` | the process is up |
+| version | `GET /version` | which git commit is deployed (`local` outside Render) |
 | health/db | `GET /health/db` | Supabase is reachable and pgvector is installed |
 | smoke | `POST /smoke` | insert, read-back and vector similarity search on a real table, in one transaction that is rolled back, so nothing persists |
 
@@ -191,11 +192,19 @@ local: scripts/smoke.sh   →   git push   →   CI green   →   Render builds 
    | Auto-deploy | after GitHub checks pass, only when `api/**` changes |
    | `DATABASE_URL` | entered when prompted: the same session-pooler URL as `.env`; never committed |
 
+   Paste only the URL: no `DATABASE_URL=` prefix, no quotes, no `<placeholders>`. The API refuses to start on any of those, and the deploy log says which. To copy it from `.env`:
+
+   ```bash
+   grep -m1 '^DATABASE_URL=' .env | cut -d= -f2- | tr -d "'\"" | sed '/sslmode=/!s/$/?sslmode=require/' | tr -d '\n' | pbcopy
+   ```
+
 3. When the deploy is live:
 
    ```bash
-   scripts/smoke.sh https://<your-service>.onrender.com
+   scripts/smoke.sh https://<your-service>.onrender.com "$(git rev-parse HEAD)"
    ```
+
+   With a commit SHA, the script also fails unless that commit is the one serving traffic, so after a push you know the new code is live, not the previous deploy.
 
 After that, every push to `main` that touches `api/` redeploys once CI is green.
 

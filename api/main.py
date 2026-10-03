@@ -33,6 +33,12 @@ async def health() -> dict:
     return {"status": "ok"}
 
 
+@app.get("/version")
+async def version() -> dict:
+    """The git commit this instance was deployed from ("local" outside Render)."""
+    return {"commit": get_settings().render_git_commit}
+
+
 @app.get("/health/db")
 async def health_db(request: Request) -> JSONResponse:
     """Readiness of the data layer: Supabase reachable and pgvector installed."""

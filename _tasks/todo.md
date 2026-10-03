@@ -184,3 +184,27 @@ Done 2026-10-03 (local). ruff/format/pyright clean; unit 9/9; integration 2/2; a
   unreachable server; it now maps each failure ([000] / UndefinedTable / PoolTimeout) to its fix.
 - .gitignore: 48 exact course paths instead of all of `.claude/`; own skills under `.claude/` are now tracked.
 - Pending (you): push → Render New → Blueprint → DATABASE_URL → `scripts/smoke.sh <url>`; time it, twice.
+
+---
+
+# Task: /version route + CLAUDE.md deployment status
+
+## Decisions
+
+- `GET /version` → `{"commit": "<RENDER_GIT_COMMIT>"}`; `"local"` when unset (local/Docker). Read through
+  `Settings.render_git_commit` (config only via get_settings). Public repo, so exposing the SHA is fine.
+- `scripts/smoke.sh [base_url] [expected_sha]`: adds a `version` check; with an expected SHA (prefix ok)
+  it FAILs on mismatch — `scripts/smoke.sh <url> "$(git rev-parse HEAD)"` proves the push is what's live.
+
+## Plan
+
+- [x] `api/config.py` field, `api/main.py` route, unit tests
+- [x] `scripts/smoke.sh` version check + optional expected SHA
+- [x] `CLAUDE.md`: Deployment row verified; Commands: clipboard command for DATABASE_URL, smoke with SHA
+- [x] `README.md`: version row in the Verify table, SHA usage in Deploy
+
+## Verification
+
+- [x] ruff/format/pyright/shellcheck clean; tests pass
+- [x] local: `/version` = local; smoke with wrong SHA fails, without SHA passes
+- [ ] after push: Render `/version` = pushed SHA via `scripts/smoke.sh <url> <sha>`

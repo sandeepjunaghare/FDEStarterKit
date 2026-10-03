@@ -122,3 +122,26 @@ def test_smoke_against_supabase(live_client):
     r = live_client.post("/smoke")
     assert r.status_code == 200, r.text
     assert r.json()["distance"] == pytest.approx(0.0)
+
+
+@pytest.fixture
+def settings_env(monkeypatch):
+    """Fresh settings from env only (CI has no .env); cache cleared before and after."""
+    from config import get_settings
+
+    monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@h:5432/db")
+    get_settings.cache_clear()
+    yield monkeypatch
+    get_settings.cache_clear()
+
+
+def test_version_reports_render_commit(client, settings_env):
+    settings_env.setenv("RENDER_GIT_COMMIT", "7e392b9abc")
+    r = client.get("/version")
+    assert r.status_code == 200
+    assert r.json() == {"commit": "7e392b9abc"}
+
+
+def test_version_is_local_outside_render(client, settings_env):
+    settings_env.delenv("RENDER_GIT_COMMIT", raising=False)
+    assert client.get("/version").json() == {"commit": "local"}

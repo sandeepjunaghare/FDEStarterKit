@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     db_pool_min: int = 1
     db_pool_max: int = 5
     db_timeout_s: float = 10.0
+    # Set by Render on every deploy; "local" elsewhere. Served by GET /version.
+    render_git_commit: str = "local"
 
     @field_validator("database_url")
     @classmethod
