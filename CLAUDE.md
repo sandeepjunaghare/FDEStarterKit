@@ -36,6 +36,7 @@ ui/                       # Streamlit app — Render web service #2; calls the A
 evals/                    # golden set (10–15 Q&A), retrieval hit rate, LLM-as-judge faithfulness → Langfuse
 scripts/
   check_db.py             # Supabase + pgvector smoke test (connect, extension, roundtrip): uv run --script scripts/check_db.py
+.github/workflows/ci.yml  # CI: ruff + pyright + unit tests, Docker build, integration (only if DATABASE_URL secret set)
 docker-compose.yml        # local parity check: api now, ui when it exists (the DB is Supabase cloud, not a container)
 research/tech-stack.md    # stack decisions + one-line defenses — the source for this map
 ```

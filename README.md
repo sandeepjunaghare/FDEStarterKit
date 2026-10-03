@@ -1,5 +1,7 @@
 # FDE Starter Kit
 
+[![CI](https://github.com/sandeepjunaghare/FDEStarterKit/actions/workflows/ci.yml/badge.svg)](https://github.com/sandeepjunaghare/FDEStarterKit/actions/workflows/ci.yml)
+
 A retrieval-augmented (RAG) assistant built as a four-agent pipeline that answers only from your documents, cites its sources, and refuses what is out of scope.
 
 **Stack:** Claude Agent SDK · FastAPI (SSE) · Supabase Postgres + pgvector · Streamlit · Langfuse · Docker → Render
@@ -124,6 +126,18 @@ uv run ruff check . ../scripts           # lint (add --fix to auto-fix)
 uv run ruff format --check . ../scripts  # formatting
 uv run pyright                           # type-check (standard mode)
 ```
+
+### CI
+
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on every push to `main` and every pull request:
+
+| Job | What it runs |
+|---|---|
+| Lint, type-check, unit tests | ruff check, ruff format --check, pyright, pytest |
+| Docker build | builds `api/Dockerfile` (no push), so a broken image fails before Render deploys it |
+| Integration tests | `pytest -m integration` against Supabase. Runs only if the `DATABASE_URL` repo secret is set |
+
+To enable integration tests in CI: **Settings → Secrets and variables → Actions → New repository secret**, name `DATABASE_URL`, value = the session-pooler URL.
 
 ---
 

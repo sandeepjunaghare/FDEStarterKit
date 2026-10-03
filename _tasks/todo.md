@@ -86,3 +86,27 @@ Done 2026-10-02. ruff clean, format clean, pyright 0 errors; unit 5/5, integrati
   one inline `pyright: ignore[reportCallIssue]` with the reason.
 - Versions: ruff 0.16.10, pyright 1.1.414 (PyPI wrapper; downloads Node on first run).
 - Next: a pre-commit hook or CI job running the same three commands so they can't drift.
+
+---
+
+# Task: GitHub Actions CI
+
+## Decisions (approved)
+
+- Workflow `.github/workflows/ci.yml`, on push to `main` and on pull requests; cancels superseded runs.
+- Job `check` (always): `uv sync --locked`, ruff check, ruff format --check, pyright, unit tests.
+- Job `integration`: `pytest -m integration` only when the `DATABASE_URL` repo secret is set
+  (step-level guard; fork PRs get no secrets, so it skips there too).
+- Job `docker`: build `api/Dockerfile` without pushing, so a broken image fails before Render deploys it.
+- Least-privilege `permissions: contents: read`; actions pinned to current major versions.
+
+## Plan
+
+- [ ] `.github/workflows/ci.yml`
+- [ ] Validate the YAML locally (actionlint if available), then push and watch the first run with `gh run watch`
+- [ ] `README.md` — CI badge + note on the optional `DATABASE_URL` secret
+- [ ] `CLAUDE.md` — map entry for `.github/workflows/ci.yml`
+
+## Verification
+
+- [ ] First CI run on GitHub: `check` and `docker` green; `integration` skipped (no secret yet)
