@@ -1,0 +1,7 @@
+# Local parity check for what Render runs. The DB is Supabase cloud, not a container.
+services:
+  api:
+    build: ./api
+    env_file: .env
+    ports:
+      - "8000:8000"
