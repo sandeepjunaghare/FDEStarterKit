@@ -173,6 +173,8 @@ To enable integration tests in CI: **Settings → Secrets and variables → Acti
 
 ## Deploy
 
+> Step-by-step procedure, troubleshooting, rollback and password rotation: [`docs/runbook-deploy.md`](docs/runbook-deploy.md).
+
 Render builds the Docker image from this repo itself; nothing is built or uploaded from your machine. The service is defined in [`render.yaml`](render.yaml) (a Render Blueprint).
 
 ```
@@ -192,10 +194,10 @@ local: scripts/smoke.sh   →   git push   →   CI green   →   Render builds 
    | Auto-deploy | after GitHub checks pass, only when `api/**` changes |
    | `DATABASE_URL` | entered when prompted: the same session-pooler URL as `.env`; never committed |
 
-   Paste only the URL: no `DATABASE_URL=` prefix, no quotes, no `<placeholders>`. The API refuses to start on any of those, and the deploy log says which. To copy it from `.env`:
+   Paste only the URL: no `DATABASE_URL=` prefix, no quotes, no `<placeholders>`. The API refuses to start on any of those, and the deploy log says which. To copy it from `.env` (prints it with the password masked):
 
    ```bash
-   grep -m1 '^DATABASE_URL=' .env | cut -d= -f2- | tr -d "'\"" | sed '/sslmode=/!s/$/?sslmode=require/' | tr -d '\n' | pbcopy
+   scripts/copy-db-url.sh
    ```
 
 3. When the deploy is live:

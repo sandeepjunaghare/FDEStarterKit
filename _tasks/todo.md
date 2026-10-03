@@ -207,4 +207,33 @@ Done 2026-10-03 (local). ruff/format/pyright clean; unit 9/9; integration 2/2; a
 
 - [x] ruff/format/pyright/shellcheck clean; tests pass
 - [x] local: `/version` = local; smoke with wrong SHA fails, without SHA passes
-- [ ] after push: Render `/version` = pushed SHA via `scripts/smoke.sh <url> <sha>`
+- [x] after push: Render `/version` = pushed SHA via `scripts/smoke.sh <url> <sha>`
+
+## Review
+
+Done 2026-10-03. Pushed 52c6029 → CI green in 41 s → Render served 52c6029 at 82 s from push →
+`scripts/smoke.sh https://fde-api.onrender.com 52c6029…` all PASS incl. `commit matches`.
+
+- Worked: the version check removed the guesswork of the previous deploy (no screenshots needed);
+  the wait loop polled /version until the pushed SHA appeared instead of sleeping a fixed time.
+- Lesson from the 7e392b9 detour: I concluded auto-deploy had failed from a single deploy page; the
+  Deploys list showed it had worked. Check the list (or /version) before diagnosing.
+- Next: timed rehearsal 2 (delete + recreate Blueprint), then the PLAN.md template, pane prompts, eval template.
+
+---
+
+# Task: copy-db-url script + deploy runbook
+
+Done 2026-10-03 (approved in chat; 2 new files + 2 link edits).
+
+- [x] `scripts/copy-db-url.sh` — strips KEY=/quotes, adds sslmode, refuses placeholders/wrong scheme, masks output
+- [x] `docs/runbook-deploy.md` — how it works, one-time setup, timed clean-slate deploy, everyday deploy,
+      failure table, rollback, password rotation (no narration lines: public repo)
+- [x] README Deploy + CLAUDE.md map/commands link both; old pbcopy one-liner removed
+
+## Review
+
+- Worked: tested the script against 7 fake .env cases with a stub pbcopy (user's clipboard untouched).
+- Didn't: guessed Render rollback leaves auto-deploy on; docs say a dashboard rollback turns it off. Fixed.
+- Rehearsal 2 log: copy step failed twice (table-mangled one-liner, clipboard overwritten by the next copy);
+  the script replaces both.

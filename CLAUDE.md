@@ -39,6 +39,8 @@ evals/                    # golden set (10–15 Q&A), retrieval hit rate, LLM-as
 scripts/
   check_db.py             # standalone Supabase + pgvector check: uv run --script scripts/check_db.py
   smoke.sh                # deploy smoke test for any URL: scripts/smoke.sh [base_url] [expected_sha]
+  copy-db-url.sh          # copies DATABASE_URL from .env for a dashboard, password masked in output
+docs/runbook-deploy.md    # deploy procedure, troubleshooting, rollback, password rotation
 render.yaml               # Render Blueprint: Docker, virginia, /health, deploys after CI passes, DATABASE_URL set in dashboard
 .github/workflows/ci.yml  # CI: ruff + pyright + unit tests, Docker build, integration (only if DATABASE_URL secret set)
 docker-compose.yml        # local parity check: api now, ui when it exists (the DB is Supabase cloud, not a container)
@@ -84,7 +86,7 @@ External services (not in the repo): Supabase (Postgres + pgvector), Anthropic A
 - run: `cd api && uv run uvicorn main:app --reload` · in Docker: `docker compose up --build`
 - migrate: `cd api && uv run python -m db.migrate` (local and Render share one Supabase DB, so run it once from here)
 - smoke: `scripts/smoke.sh` (local) · `scripts/smoke.sh https://fde-api.onrender.com "$(git rev-parse HEAD)"` (Render; fails until the pushed commit is live)
-- copy DATABASE_URL for a dashboard (no `KEY=`, no quotes, adds sslmode): `grep -m1 '^DATABASE_URL=' .env | cut -d= -f2- | tr -d "'\"" | sed '/sslmode=/!s/$/?sslmode=require/' | tr -d '\n' | pbcopy`
+- copy DATABASE_URL for a dashboard: `scripts/copy-db-url.sh` · full deploy procedure: `docs/runbook-deploy.md`
 - DB check without the API: `uv run --script scripts/check_db.py`
 - lint + format: `cd api && uv run ruff check --fix . ../scripts && uv run ruff format . ../scripts`
 - type-check: `cd api && uv run pyright` (standard mode; api/ only — scripts/ are standalone uv scripts)
