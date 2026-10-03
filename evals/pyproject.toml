@@ -1,0 +1,48 @@
+[project]
+name = "fde-evals"
+version = "0.1.0"
+description = "Eval harness: golden set → POST /ask → hit rate, citations, guardrails, faithfulness (LLM judge)"
+requires-python = ">=3.12"
+dependencies = [
+    "anthropic>=1.11.0",
+    "httpx2>=2.13.1",
+    "langfuse>=4.16.0",
+    "pydantic>=2.13.5",
+    "python-dotenv>=1.2.4",
+    "pyyaml>=6.0.3",
+]
+
+[tool.uv]
+package = false
+
+[dependency-groups]
+dev = [
+    "pyright>=1.1.414",
+    "pytest>=9.1.1",
+    "ruff>=0.16.10",
+    "types-pyyaml>=6.0.12.20260906",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "ASYNC", "SIM"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["contract", "golden", "judge", "langfuse_sink", "metrics", "run", "targets"]
+
+[tool.pyright]
+pythonVersion = "3.12"
+typeCheckingMode = "standard"
+venvPath = "."
+venv = ".venv"
+include = ["."]
+exclude = [".venv", "**/__pycache__", "results"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "-m 'not integration'"
+markers = ["integration: calls the real Claude judge (needs Anthropic credentials)"]

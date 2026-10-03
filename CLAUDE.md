@@ -35,7 +35,10 @@ api/                      # FastAPI service — Render web service; streams resp
   Dockerfile              # Render builds this from GitHub (see render.yaml)
 ui/                       # Streamlit app — second Render service; calls the API via API_URL
   app.py                  # chat view with citations + visible session/persistent memory
-evals/                    # golden set (10–15 Q&A), retrieval hit rate, LLM-as-judge faithfulness → Langfuse
+evals/                    # own uv project (pane B). Black-box eval of POST /ask: hit rate, citations, guardrails,
+                          #   faithfulness (Claude judge) → terminal, results/, optional Langfuse. evals/README.md
+  contract.py             # the /ask response shape pane A must implement, and the golden-set models
+  golden/<scenario>.yaml  # 10–15 cases per scenario; example.yaml runs against the built-in fake pipeline
 scripts/
   check_db.py             # standalone Supabase + pgvector check: uv run --script scripts/check_db.py
   smoke.sh                # deploy smoke test for any URL: scripts/smoke.sh [base_url] [latest|sha] [--wait]
@@ -75,7 +78,7 @@ own worktree via `/pane`, which owns disjoint folders; shared files (`api/main.p
 | Framework | `api/main.py` (FastAPI) | FastAPI built; Agent SDK planned |
 | Memory | `api/memory/` | planned |
 | Guardrails | `api/schemas/`, `api/guardrails/` | planned |
-| LLM Eval | `evals/` | planned |
+| LLM Eval | `evals/` | harness built and tested (fake target); per-scenario golden set + `/ask` on the day; real judge unverified until ANTHROPIC_API_KEY is set |
 | Front end | `ui/` | planned |
 
 ## Ground rules
@@ -103,3 +106,4 @@ own worktree via `/pane`, which owns disjoint folders; shared files (`api/main.p
 - DB check without the API: `uv run --script scripts/check_db.py`
 - lint + format: `cd api && uv run ruff check --fix . ../scripts && uv run ruff format . ../scripts`
 - type-check: `cd api && uv run pyright` (standard mode; api/ only — scripts/ are standalone uv scripts)
+- evals: `cd evals && uv run python run.py golden/<scenario>.yaml [--target URL|fake] [--only ids] [--compare results/x.json]` · checks: `cd evals && uv run ruff check . && uv run pyright && uv run pytest`

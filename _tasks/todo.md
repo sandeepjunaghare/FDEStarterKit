@@ -326,3 +326,57 @@ Done 2026-10-03, except the kickoff dry run (see below).
   Same reason /pane is absent from a worktree until it's committed.
 - Not done: the kickoff dry run (PRD → architecture → tickets on a fake scenario). Those skills interview
   and gate on the user's answers, so it needs you at the keyboard; proposed as the first 40 minutes of Ex1.
+
+---
+
+# Task: eval harness template (design approved in chat)
+
+## Decisions (approved)
+
+- Black box over HTTP: `POST /ask` → `{answer, citations, refused, action, retrieved[{chunk_id, doc, text}]}`;
+  `--target fake` = built-in fake pipeline for tests and before /ask exists. The /ask contract is pane A's
+  interface note.
+- `evals/` is its own uv project (never touches api/uv.lock). Command: `cd evals && uv run python run.py ...`
+- Golden set YAML; expected sources = doc + snippet (robust to re-chunking).
+- Metrics: hit rate @k, citation check, guardrail accuracy (deterministic) + faithfulness (Claude judge,
+  default claude-haiku-4-5, structured output).
+- `--only`, `--compare`, `--no-judge`; results to `evals/results/` (gitignored; demo run force-added);
+  non-zero exit below thresholds. Langfuse optional, on when keys are set (verify SDK against current docs).
+
+## Plan
+
+- [x] `evals/pyproject.toml` (+ uv.lock): httpx, pydantic, pyyaml, anthropic, langfuse, python-dotenv; dev pytest/ruff/pyright
+- [x] `evals/contract.py` (AskResponse, golden models), `golden.py`, `targets.py` (HTTP + fake), `metrics.py`,
+      `judge.py`, `langfuse_sink.py`, `run.py` (CLI, table, results, compare, exit code)
+- [x] `evals/golden/example.yaml` (4 cases: answerable ×2, out_of_scope, domain_rule) matching the fake corpus
+- [x] `evals/tests/`: metrics unit tests, end-to-end run on fake target with stubbed judge, `--compare`;
+      one `integration` test calling the real judge
+- [x] `evals/README.md`: contract, golden format, commands
+- [x] CI: evals job (ruff, format, pyright, pytest); `piv-validate` (local) gains the evals checks
+- [x] `.gitignore` evals/results/; `.env.example` EVAL_JUDGE_MODEL; CLAUDE.md map/commands/rubric row; README Eval section
+
+## Verification
+
+- [x] evals: ruff/format/pyright clean, tests pass; CI green
+- [x] `run.py golden/example.yaml --target fake` prints the table + summary; a deliberately failing case shows a reason
+- [x] `--only`, `--compare` work; exit code non-zero below threshold
+- [ ] real judge: one call with ANTHROPIC_API_KEY (if set in .env), otherwise reported as skipped
+- [ ] Langfuse: push verified only if keys exist; otherwise reported as not verified
+
+## Review
+
+Built 2026-10-03. evals: ruff/format/pyright clean, 23 unit tests pass, `--target fake` → PASS; api untouched
+(23 pass); CI gets an `evals` job (actionlint clean). CI run pending the push.
+
+- Verified after keys were added: real judge (integration test flags the unsupported "24 hours" claim; full
+  run scores both answered cases 1.00 with claude-haiku-4-5) and Langfuse (4 eval traces read back via the
+  API with hit/citations/guardrails/faithfulness scores; scores lag a few seconds behind the trace).
+- Near miss: the keys were first pasted into the tracked .env.example (uncommitted). Moved to .env without
+  printing them; .env.example restored. → secret scan in CI (next task).
+- Checked against docs instead of memory: anthropic 1.11 `messages.parse(output_format=Model)` →
+  `parsed_output`; Langfuse SDK v4 (`get_client`, `start_as_current_observation`, `score_trace`) reads
+  LANGFUSE_BASE_URL, so `.env.example`'s LANGFUSE_HOST was wrong and is fixed.
+- Bugs the tests/real SDK caught: results path printed relative to the repo crashed for an outside dir; with
+  no credentials the SDK raises TypeError at request time (not AuthenticationError) → crashed the run. Now a
+  judge error with the fix in the message, and the run fails (exit 1) instead of looking green.
+- Design change: /ask returns `action` only (no separate `refused` flag, which could contradict it).

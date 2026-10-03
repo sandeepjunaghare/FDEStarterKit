@@ -75,3 +75,6 @@ research/PREP_PLAN.md
 
 # Parallel worktrees (see .worktreeinclude)
 worktrees/
+
+# Eval run results (git add -f the one you want as evidence)
+evals/results/
