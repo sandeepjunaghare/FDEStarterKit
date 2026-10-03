@@ -237,3 +237,7 @@ Done 2026-10-03 (approved in chat; 2 new files + 2 link edits).
 - Didn't: guessed Render rollback leaves auto-deploy on; docs say a dashboard rollback turns it off. Fixed.
 - Rehearsal 2 log: copy step failed twice (table-mangled one-liner, clipboard overwritten by the next copy);
   the script replaces both.
+- Found after pushing 4537cfa: `smoke.sh <url> "$(git rev-parse HEAD)"` (documented in 3 places) fails after any
+  push that doesn't touch api/, because buildFilter skips the redeploy. And after a clean-slate Blueprint the
+  live commit is HEAD, so "last api/ commit" isn't right either. Fix: `smoke.sh <url> latest` compares the
+  live commit's api/ tree with HEAD's. Lesson: test documented commands against the state *after* the push.

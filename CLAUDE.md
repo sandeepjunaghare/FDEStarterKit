@@ -38,7 +38,7 @@ ui/                       # Streamlit app — second Render service; calls the A
 evals/                    # golden set (10–15 Q&A), retrieval hit rate, LLM-as-judge faithfulness → Langfuse
 scripts/
   check_db.py             # standalone Supabase + pgvector check: uv run --script scripts/check_db.py
-  smoke.sh                # deploy smoke test for any URL: scripts/smoke.sh [base_url] [expected_sha]
+  smoke.sh                # deploy smoke test for any URL: scripts/smoke.sh [base_url] [latest|sha]
   copy-db-url.sh          # copies DATABASE_URL from .env for a dashboard, password masked in output
 docs/runbook-deploy.md    # deploy procedure, troubleshooting, rollback, password rotation
 render.yaml               # Render Blueprint: Docker, virginia, /health, deploys after CI passes, DATABASE_URL set in dashboard
@@ -85,7 +85,7 @@ External services (not in the repo): Supabase (Postgres + pgvector), Anthropic A
 - test: `cd api && uv run pytest` (unit, no network) · `uv run pytest -m integration` (real Supabase)
 - run: `cd api && uv run uvicorn main:app --reload` · in Docker: `docker compose up --build`
 - migrate: `cd api && uv run python -m db.migrate` (local and Render share one Supabase DB, so run it once from here)
-- smoke: `scripts/smoke.sh` (local) · `scripts/smoke.sh https://fde-api.onrender.com "$(git rev-parse HEAD)"` (Render; fails until the pushed commit is live)
+- smoke: `scripts/smoke.sh` (local) · `scripts/smoke.sh https://fde-api.onrender.com latest` (Render; fails until the live api/ code matches HEAD)
 - copy DATABASE_URL for a dashboard: `scripts/copy-db-url.sh` · full deploy procedure: `docs/runbook-deploy.md`
 - DB check without the API: `uv run --script scripts/check_db.py`
 - lint + format: `cd api && uv run ruff check --fix . ../scripts && uv run ruff format . ../scripts`

@@ -203,10 +203,10 @@ local: scripts/smoke.sh   →   git push   →   CI green   →   Render builds 
 3. When the deploy is live:
 
    ```bash
-   scripts/smoke.sh https://<your-service>.onrender.com "$(git rev-parse HEAD)"
+   scripts/smoke.sh https://<your-service>.onrender.com latest
    ```
 
-   With a commit SHA, the script also fails unless that commit is the one serving traffic, so after a push you know the new code is live, not the previous deploy.
+   `latest` also fails unless the live commit has the same `api/` code as your `HEAD`, so after a push you know the new code is serving, not the previous deploy. (Pushes that don't touch `api/` don't redeploy; `latest` accepts that because the API code is unchanged.)
 
 After that, every push to `main` that touches `api/` redeploys once CI is green.
 

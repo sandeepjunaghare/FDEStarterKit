@@ -69,11 +69,11 @@ It prints the URL with the password masked. It must start with `postgresql://pos
 
 **5. Copy the service URL** from the top of the fde-api page. Usually `https://fde-api.onrender.com`; Render adds a suffix if the name is taken.
 
-**6. Smoke test against the commit you expect:**
+**6. Smoke test, checking the live API code matches `main`:**
 
 ```bash
 URL=https://fde-api.onrender.com
-scripts/smoke.sh "$URL" "$(git rev-parse HEAD)"
+scripts/smoke.sh "$URL" latest
 ```
 
 **7. Stop the timer at `SMOKE OK`.**
@@ -81,7 +81,7 @@ scripts/smoke.sh "$URL" "$(git rev-parse HEAD)"
 ```
 PASS  health     {"status":"ok"}
 PASS  version    {"commit":"<sha>"}
-PASS  commit     live commit matches <sha7>
+PASS  commit     live <sha7> has the same api/ code as HEAD <sha7>
 PASS  health/db  {"db":"ok","pgvector":"0.8.2"}
 PASS  smoke      {"smoke":"ok","write":"ok","read":"ok","vector_search":"ok","distance":0.0}
 SMOKE OK
@@ -95,12 +95,12 @@ After the one-time setup, deploying is a push:
 
 ```bash
 git push
-scripts/smoke.sh https://fde-api.onrender.com "$(git rev-parse HEAD)"
+scripts/smoke.sh https://fde-api.onrender.com latest
 ```
 
-The smoke test fails with `commit mismatch` until the new commit is live (about 40 s after CI passes, roughly 80 s after the push). Re-run it until it passes.
+`latest` passes when the live commit has the same `api/` code as your `HEAD`. After an `api/` change it fails with `different api/ code` until the new deploy is live (about 40 s after CI passes, roughly 80 s after the push); re-run it until it passes.
 
-Changes outside `api/` (docs, scripts) do not redeploy, by design (`buildFilter` in `render.yaml`).
+Changes outside `api/` (docs, scripts) do not redeploy, by design (`buildFilter` in `render.yaml`). The live commit is then older than `HEAD`, which `latest` accepts because the API code is identical. To require one exact commit instead, pass its SHA: `scripts/smoke.sh <url> 52c6029`.
 
 ---
 
@@ -110,7 +110,8 @@ Changes outside `api/` (docs, scripts) do not redeploy, by design (`buildFilter`
 |---|---|---|
 | Deploy log: `validation error for Settings … DATABASE_URL` | Malformed value: `KEY=` prefix, quotes, placeholder or wrong scheme. The message says which | Render → fde-api → **Environment** → fix → **Save, rebuild, and deploy**. Use `scripts/copy-db-url.sh` |
 | Smoke `[000] curl failed` | Still deploying, or a free instance waking up (up to ~60 s) | Wait 30 s, re-run step 6 |
-| Smoke `commit … live is <old>, expected <new>` | New deploy not live yet, or Render built an older commit | Wait a minute. Still old: check the pre-flight, then **Manual Deploy → Deploy latest commit** |
+| Smoke `commit … different api/ code than HEAD` | New deploy not live yet, or Render built an older commit | Wait a minute. Still old: check the pre-flight, then **Manual Deploy → Deploy latest commit** |
+| Smoke `commit … unknown locally` | Live commit isn't in your clone | `git fetch` and re-run |
 | `503 {"detail":"PoolTimeout"}` | Render can't log in to Supabase | Render → fde-api → **Logs**, search `error connecting`. `tenant/user … not found`: wrong project ref or placeholder in the URL. `invalid connection option`: `KEY=` pasted into the value |
 | `503 {"detail":"UndefinedTable"}` | Migrations not applied to this database | `cd api && uv run python -m db.migrate` |
 | Repo missing in Render's picker | Render's GitHub app lacks access | One-time setup, step 1 |
