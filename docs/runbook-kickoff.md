@@ -61,6 +61,21 @@ The stack is already decided in `research/tech-stack.md`; tell it to treat those
 scenario-specific parts: chunking + table schema, the domain guardrail rule, memory scope, the golden eval set.
 Output: a standalone `docs/architecture.md`.
 
+Before moving on, check that it has a **Data model + domain rule** section with all of these. Panes A and B
+build straight from it, so a vague line here becomes a guess in two panes:
+
+- [ ] **Chunks table:** columns and types, `embedding vector(1024)`, `enable row level security`. Becomes
+      `api/db/migrations/0002_*.sql` (pane B).
+- [ ] **Chunking:** unit (section, page, row) and size; what `doc` and `chunk_id` hold. `chunk_id` must be
+      stable, since citations and the golden set point at it.
+- [ ] **`/ask` response:** matches `evals/contract.py` `AskResponse` (answer, citations, action, retrieved).
+      Which `action` values this scenario uses: answer, refuse, redact, escalate.
+- [ ] **Domain rule:** one testable sentence, "refuse/escalate if …; every answer must cite …", plus what the
+      user sees when it fires. Lives in `api/guardrails/` (pane A).
+- [ ] **Golden cases for it:** at least one `domain_rule` case, one `out_of_scope`, one `pii` (pane B,
+      `evals/golden/<scenario>.yaml`).
+- [ ] **Memory scope:** what's kept per session vs per user profile, keyed by `user_id`.
+
 ## 4. Tickets (0:34–0:38)
 
 ```
