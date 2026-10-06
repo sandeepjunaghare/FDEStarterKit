@@ -19,7 +19,7 @@ Copy commands from the code blocks only. Replace `<slug>` with the PRD's file sl
 | 0:34–0:38 | 4. Tickets + commit | `docs/tickets/<slug>.md` |
 | 0:38–0:42 | 5. Worktrees + launch panes | `worktrees/pane-{a,b,c,d}` |
 | 0:42–1:40 | 6. Panes: plan → **review** → build | commits per pane |
-| 1:40–1:50 | 7. Merge + validate | one branch on `main` |
+| 1:40–1:50 | 7. Merge + validate + local end-to-end check | app working on localhost |
 | 1:50–2:05 | 8. Deploy + evals live | `docs/runbook-deploy.md` |
 
 Time boxes are targets. If a step runs over, tighten its input; don't skip the step.
@@ -118,7 +118,21 @@ on its own branch, with the rubric item in the message. "Needs from A" items go 
 /worktree-merge pane-a pane-b pane-c pane-d
 ```
 
-Then run `/piv-validate` on the merged result and push.
+Then run `/piv-validate` on the merged result. **Don't push yet.**
+
+**Local end-to-end check (~3 min), the gate before deploy.** As soon as everything is merged, show the whole app
+working on the laptop with plain uv (same Supabase database as Render):
+
+Three terminals, each starting at the repo root (migrate is a no-op when nothing is new):
+
+```bash
+cd api && uv run python -m db.migrate && uv run uvicorn main:app --port 8710   # terminal 1
+cd ui && uv run streamlit run app.py                                          # terminal 2
+scripts/smoke.sh --wait                                                       # terminal 3
+```
+
+Open http://localhost:8711 and ask 2–3 golden questions: one answered with citations, one the domain rule
+refuses. Works → step 8. Doesn't → fix on `main` and re-check; don't push a broken app to find out on Render.
 
 ## 8. Deploy (1:50–2:05)
 
@@ -127,5 +141,5 @@ git push
 scripts/smoke.sh https://fde-api.onrender.com latest --wait
 ```
 
-New migrations from pane B: `cd api && uv run python -m db.migrate` before the smoke test. Full procedure:
+Migrations already ran in step 7 (local and Render share one database). Full procedure:
 `docs/runbook-deploy.md`. Render failing or CI red with no time to fix: `docs/runbook-local.md`.
