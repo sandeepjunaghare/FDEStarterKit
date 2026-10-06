@@ -60,7 +60,7 @@ docs/tickets/<slug>.md    # (per scenario) 4 parallel tickets, one per pane — 
 .worktreeinclude          # gitignored files /worktree-create copies into each worktree (.env, course skills)
 .gitleaks.toml            # secret-scan rules (CI): defaults + Anthropic any-prefix, Voyage, Postgres URL with password
 render.yaml               # Render Blueprint: Docker, virginia, /health, deploys after CI passes, DATABASE_URL set in dashboard
-.github/workflows/ci.yml  # CI: ruff + pyright + unit tests (api, evals, ui), gitleaks, Docker build, integration (only if DATABASE_URL secret set)
+.github/workflows/ci.yml  # CI: ruff + pyright (api, evals, ui), unit tests (api, evals), gitleaks, Docker build, integration (only if DATABASE_URL secret set)
 docker-compose.yml        # local run: api on 8710, ui on 8711 (the DB is Supabase cloud, not a container)
 .env.example              # every env var the stack uses; copy to .env
 research/tech-stack.md    # stack decisions + one-line defenses — the source for this map
