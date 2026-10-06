@@ -76,14 +76,14 @@ own worktree via `/pane`, which owns disjoint folders; shared files (`api/main.p
 | Rubric item | Where | Status |
 |---|---|---|
 | Deployment | `render.yaml`, `api/Dockerfile`, `scripts/smoke.sh`, `docs/runbook-deploy.md` | verified: push → CI → auto-deploy (~35 s) → smoke OK; clean-slate deploy rehearsed in 1:29 |
-| GitHub | `README.md`, `.github/workflows/ci.yml` | built |
+| GitHub | `README.md`, `.github/workflows/ci.yml` | verified: CI green on the last 8 pushes (lint, types, unit tests, evals harness, gitleaks, Docker build); README has the Handoff section |
 | Vector DB | `api/db/`, `api/db/migrations/` | connection + smoke table built; documents/chunks table planned |
 | Embedding model | `api/rag/`, `EMBEDDING_*` + `VOYAGE_API_KEY` in `.env` | chosen + verified: voyage-4, 1024 dims → `vector(1024)` (`scripts/check_embeddings.py`); rag/ client planned |
 | Multi-agent orchestration | `api/agents/` | planned |
 | Framework | `api/main.py` (FastAPI) | FastAPI built; Agent SDK planned |
 | Memory | `api/memory/` | planned |
 | Guardrails | `api/schemas/`, `api/guardrails/` | planned |
-| LLM Eval | `evals/` | harness built and tested (fake target); per-scenario golden set + `/ask` on the day; real judge unverified until ANTHROPIC_API_KEY is set |
+| LLM Eval | `evals/` | verified: harness tested (fake target); real Claude judge (claude-haiku-4-5) passes the example set and flags an unsupported claim (`pytest -m integration`), Langfuse traces on; per-scenario golden set + `/ask` on the day |
 | Front end | `ui/` | planned |
 
 ## Ground rules
