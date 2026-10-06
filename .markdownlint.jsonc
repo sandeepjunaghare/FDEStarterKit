@@ -1,0 +1,5 @@
+{
+  "MD012": false, // template files leave blank lines as space to type in
+  "MD013": false, // no line-length limit for prose
+  "MD033": false  // <placeholders> in templates are not HTML
+}
