@@ -60,7 +60,7 @@ docs/tickets/<slug>.md    # (per scenario) 4 parallel tickets, one per pane — 
 .worktreeinclude          # gitignored files /worktree-create copies into each worktree (.env, course skills)
 .gitleaks.toml            # secret-scan rules (CI): defaults + Anthropic any-prefix, Voyage, Postgres URL with password
 render.yaml               # Render Blueprint: Docker, virginia, /health, deploys after CI passes, DATABASE_URL set in dashboard
-.github/workflows/ci.yml  # CI: ruff + pyright + unit tests, Docker build, integration (only if DATABASE_URL secret set)
+.github/workflows/ci.yml  # CI: ruff + pyright + unit tests (api, evals, ui), gitleaks, Docker build, integration (only if DATABASE_URL secret set)
 docker-compose.yml        # local run: api on 8710, ui on 8711 (the DB is Supabase cloud, not a container)
 .env.example              # every env var the stack uses; copy to .env
 research/tech-stack.md    # stack decisions + one-line defenses — the source for this map
@@ -78,7 +78,7 @@ own worktree via `/pane`, which owns disjoint folders; shared files (`api/main.p
 | Rubric item | Where | Status |
 |---|---|---|
 | Deployment | `render.yaml`, `api/Dockerfile`, `scripts/smoke.sh`, `docs/runbook-deploy.md` | verified: push → CI → auto-deploy (~35 s) → smoke OK; clean-slate deploy rehearsed in 1:29 |
-| GitHub | `README.md`, `.github/workflows/ci.yml` | verified: CI green on the last 8 pushes (lint, types, unit tests, evals harness, gitleaks, Docker build); README has the Handoff section |
+| GitHub | `README.md`, `.github/workflows/ci.yml` | verified: CI green on the last 8 pushes (lint, types, unit tests, evals harness, ui lint + types, gitleaks, Docker build); README has the Handoff section |
 | Vector DB | `api/db/`, `api/db/migrations/` | connection + smoke table built; documents/chunks table planned |
 | Embedding model | `api/rag/`, `EMBEDDING_*` + `VOYAGE_API_KEY` in `.env` | chosen + verified: voyage-4, 1024 dims → `vector(1024)` (`scripts/check_embeddings.py`); rag/ client planned |
 | Multi-agent orchestration | `api/agents/` | planned |

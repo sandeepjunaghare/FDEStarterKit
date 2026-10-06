@@ -77,6 +77,27 @@ jobs:
       - name: Harness self-test on the fake pipeline
         run: uv run python run.py golden/example.yaml --target fake --no-judge --no-save
 
+  ui:
+    name: UI (lint, types)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ui
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0 (no major tag published)
+        with:
+          enable-cache: true
+          cache-dependency-glob: ui/uv.lock
+      - name: Install
+        run: uv sync --locked
+      - name: Lint
+        run: uv run ruff check --output-format=github .
+      - name: Format
+        run: uv run ruff format --check .
+      - name: Type-check
+        run: uv run pyright
+
   integration:
     name: Integration tests (Supabase)
     runs-on: ubuntu-latest
