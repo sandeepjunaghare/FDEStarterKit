@@ -1,5 +1,7 @@
 {
   "MD012": false, // template files leave blank lines as space to type in
   "MD013": false, // no line-length limit for prose
-  "MD033": false  // <placeholders> in templates are not HTML
+  "MD033": false, // <placeholders> in templates are not HTML
+  "MD040": false, // runbook command blocks are slash commands, not a language
+  "MD060": false  // compact tables (|---|) are the house style
 }
