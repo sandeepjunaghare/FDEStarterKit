@@ -29,10 +29,18 @@ Time boxes are targets. If a step runs over, tighten its input; don't skip the s
 ## 1. Discovery (minutes 10–20)
 
 ```bash
-cp docs/templates/discovery-notes.md docs/discovery-notes.md
+cp docs/templates/discovery-raw.md docs/discovery-raw.md
 ```
 
-Ask 5–6 questions from it, write the answers as they're said. Paste the brief at the top.
+Paste the brief after `Brief:`. Ask 5–6 questions from the cheat sheet and type answers in any order under
+`Notes:` (tags optional: `?` open question, `A:` assumption, `"` quote). Around minute 17, and again at the end:
+
+```
+/discovery
+```
+
+It sorts the notes into `docs/discovery-notes.md` without inventing anything and lists the empty sections, so
+you can ask about them while the stakeholder is still there.
 
 ## 2. PRD: the what (minutes 20–27)
 

@@ -5,7 +5,8 @@ that `/plan-create-prd` writes, so these notes *are* the PRD interview: pass thi
 and it only asks about gaps. Pick 5–6 questions, not all. Write answers as they're said; mark guesses
 `ASSUMPTION`.
 
-Save as `docs/discovery-notes.md`, then see `docs/runbook-kickoff.md` step 2.
+Save as `docs/discovery-notes.md`, then see `docs/runbook-kickoff.md` step 2. Usually you don't fill this by hand:
+type into `docs/discovery-raw.md` during the call and `/discovery` writes this file from it.
 
 ---
 

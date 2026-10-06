@@ -46,12 +46,14 @@ scripts/
   check_embeddings.py     # Voyage embedding check (dim = EMBEDDING_DIM, ranking): uv run --script scripts/check_embeddings.py
 docs/runbook-deploy.md    # deploy procedure, troubleshooting, rollback, password rotation
 docs/runbook-kickoff.md   # brief → PRD → architecture → tickets → 4 worktree panes, minute by minute
-docs/templates/           # discovery-notes.md: stakeholder questions mapped to PRD sections
+docs/templates/           # discovery-raw.md: freeform capture during the call → /discovery sorts it into
+                          #   discovery-notes.md (stakeholder questions mapped to PRD sections)
 docs/visual/one-page.html # non-technical one-pager (pane D): edit the `page` object; flags jargon on screen
 docs/<slug>.prd.md        # (per scenario) the what/why — /plan-create-prd
 docs/architecture.md      # (per scenario) the how — /plan-architecture
 docs/tickets/<slug>.md    # (per scenario) 4 parallel tickets, one per pane — /piv-slice-epic
 .claude/skills/pane/      # /pane <A|B|C|D> <ticket>: PIV loop for one pane, stops for review after planning
+.claude/skills/discovery/ # /discovery: raw call notes → docs/discovery-notes.md, never invents, lists the gaps
 .claude/plans/ reports/   # plans and implementation reports written by the PIV skills (committed)
 .worktreeinclude          # gitignored files /worktree-create copies into each worktree (.env, course skills)
 .gitleaks.toml            # secret-scan rules (CI): defaults + Anthropic any-prefix, Voyage, Postgres URL with password
