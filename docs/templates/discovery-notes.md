@@ -1,6 +1,6 @@
 # Discovery notes — <scenario>
 
-Fill this in **while talking to the stakeholder** (minutes ~10–20). Each block maps to a section of the PRD
+Fill this in **while talking to the stakeholder** (~0:10–0:20). Each block maps to a section of the PRD
 that `/plan-create-prd` writes, so these notes *are* the PRD interview: pass this file in as its reference doc
 and it only asks about gaps. Pick 5–6 questions, not all. Write answers as they're said; mark guesses
 `ASSUMPTION`.

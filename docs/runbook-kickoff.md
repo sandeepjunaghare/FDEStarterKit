@@ -10,30 +10,30 @@ brief → discovery notes → /plan-create-prd → /plan-architecture → /piv-s
 
 Copy commands from the code blocks only. Replace `<slug>` with the PRD's file slug once it exists.
 
-| Minute | Step | Output |
+| Time (h:mm) | Step | Output |
 |---|---|---|
-| 0–10 | Read the brief, pick the scenario | — |
-| 10–20 | 1. Discovery | `docs/discovery-notes.md` |
-| 20–27 | 2. PRD (what / why) | `docs/<slug>.prd.md` |
-| 27–34 | 3. Architecture (how) | `docs/architecture.md` |
-| 34–38 | 4. Tickets + commit | `docs/tickets/<slug>.md` |
-| 38–42 | 5. Worktrees + launch panes | `worktrees/pane-{a,b,c,d}` |
-| 42–100 | 6. Panes: plan → **review** → build | commits per pane |
-| 100–110 | 7. Merge + validate | one branch on `main` |
-| 110–125 | 8. Deploy + evals live | `docs/runbook-deploy.md` |
+| 0:00–0:10 | Read the brief, pick the scenario | — |
+| 0:10–0:20 | 1. Discovery | `docs/discovery-notes.md` |
+| 0:20–0:27 | 2. PRD (what / why) | `docs/<slug>.prd.md` |
+| 0:27–0:34 | 3. Architecture (how) | `docs/architecture.md` |
+| 0:34–0:38 | 4. Tickets + commit | `docs/tickets/<slug>.md` |
+| 0:38–0:42 | 5. Worktrees + launch panes | `worktrees/pane-{a,b,c,d}` |
+| 0:42–1:40 | 6. Panes: plan → **review** → build | commits per pane |
+| 1:40–1:50 | 7. Merge + validate | one branch on `main` |
+| 1:50–2:05 | 8. Deploy + evals live | `docs/runbook-deploy.md` |
 
 Time boxes are targets. If a step runs over, tighten its input; don't skip the step.
 
 ---
 
-## 1. Discovery (minutes 10–20)
+## 1. Discovery (0:10–0:20)
 
 ```bash
 cp docs/templates/discovery-raw.md docs/discovery-raw.md
 ```
 
 Paste the brief after `Brief:`. Ask 5–6 questions from the cheat sheet and type answers in any order under
-`Notes:` (tags optional: `?` open question, `A:` assumption, `"` quote). Around minute 17, and again at the end:
+`Notes:` (tags optional: `?` open question, `A:` assumption, `"` quote). Around 0:17, and again at the end:
 
 ```
 /discovery
@@ -42,7 +42,7 @@ Paste the brief after `Brief:`. Ask 5–6 questions from the cheat sheet and typ
 It sorts the notes into `docs/discovery-notes.md` without inventing anything and lists the empty sections, so
 you can ask about them while the stakeholder is still there.
 
-## 2. PRD: the what (minutes 20–27)
+## 2. PRD: the what (0:20–0:27)
 
 ```
 /plan-create-prd <one-line idea from the brief> · docs/discovery-notes.md
@@ -51,7 +51,7 @@ you can ask about them while the stakeholder is still there.
 The notes answer most of its interview; it asks only about gaps. Insist on the hypothesis's WRONG condition.
 Output: `docs/<slug>.prd.md`.
 
-## 3. Architecture: the how (minutes 27–34)
+## 3. Architecture: the how (0:27–0:34)
 
 ```
 /plan-architecture docs/<slug>.prd.md · research/tech-stack.md CLAUDE.md
@@ -61,7 +61,7 @@ The stack is already decided in `research/tech-stack.md`; tell it to treat those
 scenario-specific parts: chunking + table schema, the domain guardrail rule, memory scope, the golden eval set.
 Output: a standalone `docs/architecture.md`.
 
-## 4. Tickets (minutes 34–38)
+## 4. Tickets (0:34–0:38)
 
 ```
 /piv-slice-epic docs/<slug>.prd.md docs/architecture.md · local tracker: docs/tickets/<slug>.md · Slice into exactly 4 tickets that run in parallel, one per pane, each owning disjoint folders: A = api/agents api/schemas api/guardrails api/memory + shared files (api/main.py api/config.py api/pyproject.toml .env.example CLAUDE.md); B = api/rag api/db/migrations evals; C = ui; D = README.md docs render.yaml + non-technical visual. Name them T1–T4 for panes A–D. Cross-pane needs go to pane A as explicit interface notes.
@@ -73,7 +73,7 @@ Commit before branching, or the worktrees won't have the docs:
 git add docs/ && git commit -m "docs: PRD, architecture and tickets — planning" && git push
 ```
 
-## 5. Worktrees + panes (minutes 38–42)
+## 5. Worktrees + panes (0:38–0:42)
 
 ```
 /worktree-create pane-a pane-b pane-c pane-d
@@ -91,13 +91,13 @@ cd worktrees/pane-a && claude
 
 Repeat for `pane-b` (`/pane B …#T2`), `pane-c` (`/pane C …#T3`), `pane-d` (`/pane D …#T4`).
 
-## 6. Build (minutes 42–100)
+## 6. Build (0:42–1:40)
 
 Each pane plans, then **stops for your review** (≤10-line summary). Review the plan, say `go` or ask for changes.
 Rotate through the panes; don't leave one unattended for more than 10 minutes. Each pane validates and commits
 on its own branch, with the rubric item in the message. "Needs from A" items go to pane A.
 
-## 7. Merge + validate (minutes 100–110)
+## 7. Merge + validate (1:40–1:50)
 
 ```
 /worktree-merge pane-a pane-b pane-c pane-d
@@ -105,7 +105,7 @@ on its own branch, with the rubric item in the message. "Needs from A" items go 
 
 Then run `/piv-validate` on the merged result and push.
 
-## 8. Deploy (minutes 110–125)
+## 8. Deploy (1:50–2:05)
 
 ```bash
 git push
