@@ -17,19 +17,19 @@ type into `docs/discovery-raw.md` during the call and `/discovery` writes this f
 ## 1. Problem → *Problem Statement*
 
 - Who is the end user (a role, not "users")? What do they do today without this?
-  -
+  - …
 - What does it cost when they get it wrong or slow today?
-  -
+  - …
 
 ## 2. Evidence → *Evidence*
 
 - What tells us this is real: a quote, a ticket theme, a number? Or is it an assumption?
-  -
+  - …
 
 ## 3. Why build it → *Thesis*
 
 - Why now? Why would they switch from how they cope today?
-  -
+  - …
 
 ## 4. The bet → *Hypothesis*
 
@@ -52,26 +52,26 @@ type into `docs/discovery-raw.md` during the call and `/discovery` writes this f
 ## 7. Success → *Success Metrics*
 
 - What one metric says their life got easier? (metric · target · how measured)
-  -
+  - …
 
 ## 8. Out of scope → *Non-goals*
 
--
+- …
 
 ## 9. Constraints → feed `/plan-architecture` (not the PRD)
 
 - **Data:** format, volume, update frequency, owner. May we use synthetic data for the prototype?
-  -
+  - …
 - **Cost of a wrong answer:** sets guardrail strictness and whether every answer needs a citation.
-  -
+  - …
 - **PII / regulatory:** HIPAA, FINRA, internal-only? Sets redaction and hosting.
-  -
+  - …
 - **Audience and latency:** internal or client-facing? How fast must it answer?
-  -
+  - …
 - **Trust:** what makes them use it: citations, confidence, escalation to a human?
-  -
+  - …
 - **Existing systems:** must it sit next to something, or is greenfield fine today?
-  -
+  - …
 
 ## Open questions → *Open Questions*
 
