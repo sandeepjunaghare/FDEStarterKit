@@ -83,7 +83,7 @@ own worktree via `/pane`, which owns disjoint folders; shared files (`api/main.p
 | Framework | `api/main.py` (FastAPI) | FastAPI built; Agent SDK planned |
 | Memory | `api/memory/` | planned |
 | Guardrails | `api/schemas/`, `api/guardrails/` | planned |
-| LLM Eval | `evals/` | verified: harness tested (fake target); real Claude judge (claude-haiku-4-5) passes the example set and flags an unsupported claim (`pytest -m integration`), Langfuse traces on; per-scenario golden set + `/ask` on the day |
+| LLM Eval | `evals/` | verified: harness tested (fake target); real Claude judge (claude-haiku-4-5) passes the example set (`evals/results/20261006-162139-example.json`) and flags an unsupported claim (`pytest -m integration`), Langfuse traces on; per-scenario golden set + `/ask` on the day |
 | Front end | `ui/` | planned |
 
 ## Ground rules
