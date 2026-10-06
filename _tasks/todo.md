@@ -468,3 +468,37 @@ blocks shell writes to `.claude/skills/`, so the skill file is written with the 
 - Not fixed (pre-existing): in the template, the bare `  -` placeholder lines make markdown render the line above
   as a setext heading. Generated notes don't have this (answers replace the bare dashes).
 - Unverified: real timing mid-call (~minute 17 run). The dry run took ~35 s.
+
+---
+
+# Task: local fallback — UI skeleton + compose + uv route + runbook (approved in chat, option 1)
+
+Done 2026-10-06.
+
+Why: render.yaml deploys only when CI is green, so a red CI (or a Render problem) means the latest code can only
+be demoed locally. Supabase outage is out of scope (user decision).
+
+- [x] Local ports: API 8710, UI 8711 (8000/8501 are common and collide). Update compose, smoke.sh default,
+      evals --target default, .env.example API_URL, README/evals README mentions. Render unaffected ($PORT).
+- [x] `ui/` skeleton: pyproject (uv, 3.12, streamlit + httpx, ruff/pyright dev), app.py placeholder that calls
+      /health, /version, /health/db and shows connected/error, Dockerfile (mirrors api/, port ${PORT:-8711}).
+- [x] compose: api on 8710, ui on 8711 with API_URL=http://api:8710, ui depends on api.
+- [x] Rehearse route A cold: `docker compose up --build -d` → smoke → UI shows connected; time it.
+- [x] Rehearse route B: `uv run` api and ui in two terminals against Supabase cloud → smoke → UI connected.
+- [x] `docs/runbook-local.md`: when to switch (CI red, deploy failed twice, Render smoke fails/hangs), route A,
+      route B, smoke + evals on localhost, what to say, switch back, before-the-day warm build.
+- [x] Links: runbook-deploy failure table, kickoff step 8, README, CLAUDE.md map/commands/rubric (Front end:
+      skeleton built). Kickoff step 4 prompt: pane C owns ui/ + compose ui service, builds on the skeleton.
+- [x] Lint/type-check ui, rehearse from the runbook text only, commit + push, smoke Render.
+
+## Review
+
+- Both routes rehearsed against Supabase cloud and checked in a real browser (agent-browser): Docker cold
+  ~50 s / warm 8 s, uv ~4 s; UI shows "Connected to the API and the database" with three ✅.
+- Headless Chrome `--screenshot` only caught Streamlit's loading skeleton (websocket render); agent-browser
+  with a 6 s wait was needed. Noted in the runbook troubleshooting table.
+- First smoke after `docker compose up -d` failed because the API wasn't up yet → runbook uses `--wait`.
+- Moved Streamlit flags into ui/.streamlit/config.toml so Docker and uv behave the same; hid the
+  "Deploy" toolbar button for demos.
+- Port change touched smoke.sh, evals --target default, .env.example, READMEs. Render unaffected ($PORT).
+- Not done: no CI job for ui/ (lint/types run locally only) and no Render service for ui (pane C/D on the day).

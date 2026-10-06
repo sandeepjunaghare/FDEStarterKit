@@ -2,7 +2,7 @@
 
   cd evals
   uv run python run.py golden/example.yaml --target fake          # harness self-test, no API
-  uv run python run.py golden/<scenario>.yaml                       # local API at http://localhost:8000
+  uv run python run.py golden/<scenario>.yaml                       # local API at http://localhost:8710
   uv run python run.py golden/<scenario>.yaml --target https://fde-api.onrender.com
   ... --only case-a,case-b   --no-judge   --compare results/<earlier>.json   --k 5
 
@@ -231,7 +231,7 @@ def save(results: list[CaseResult], summary: dict, meta: dict, results_dir: Path
 def main(argv: list[str] | None = None, judge: Judge | None = None) -> int:
     p = argparse.ArgumentParser(description="Run a golden set against /ask and score it.")
     p.add_argument("golden", help="golden-set YAML, e.g. golden/example.yaml")
-    p.add_argument("--target", default="http://localhost:8000", help='API base URL, or "fake"')
+    p.add_argument("--target", default="http://localhost:8710", help='API base URL, or "fake"')
     p.add_argument("--k", type=int, help="top-k for retrieval hit (default: the golden file's k)")
     p.add_argument("--only", help="comma-separated case ids to run")
     p.add_argument("--no-judge", action="store_true", help="skip the LLM faithfulness judge")

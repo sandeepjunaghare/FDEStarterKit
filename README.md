@@ -102,19 +102,21 @@ Applies each file in `api/db/migrations/` once, in order (re-running is a no-op)
 ```bash
 cd api
 uv sync
-uv run uvicorn main:app --reload
+uv run uvicorn main:app --reload --port 8710
 ```
 
-Or in Docker, from the repo root:
+Or API + UI in Docker, from the repo root (UI on http://localhost:8711):
 
 ```bash
 docker compose up --build
 ```
 
+Render down or CI red? `docs/runbook-local.md` runs and demos the whole app locally, with Docker or plain uv.
+
 ### 5. Verify
 
 ```bash
-scripts/smoke.sh            # defaults to http://localhost:8000
+scripts/smoke.sh            # defaults to http://localhost:8710
 ```
 
 | Check | Route | Proves |
@@ -172,7 +174,7 @@ To enable integration tests in CI: **Settings → Secrets and variables → Acti
 
 ```bash
 cd evals
-uv run python run.py golden/<scenario>.yaml --target http://localhost:8000
+uv run python run.py golden/<scenario>.yaml --target http://localhost:8710
 uv run python run.py golden/<scenario>.yaml --only <case-id> --compare results/<earlier>.json   # fix → rerun
 ```
 
@@ -231,7 +233,7 @@ After that, every push to `main` that touches `api/` redeploys once CI is green.
 **Notes**
 
 - `/health` never touches the database, so a Supabase blip can't block a deploy. `scripts/smoke.sh` checks the data path.
-- The container listens on Render's `$PORT` (default 8000 locally) and runs as a non-root user.
+- The container listens on Render's `$PORT` (8710 in docker compose) and runs as a non-root user.
 - Free instances sleep when idle. The first request after a pause can take 30–60 s (the smoke script waits up to 90 s), so warm the URL before a demo.
 - The Streamlit UI will be a second service in `render.yaml`, with `API_URL` pointing at this one.
 

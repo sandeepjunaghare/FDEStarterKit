@@ -1,0 +1,10 @@
+# Shared by `uv run streamlit run app.py` and the Docker image.
+[server]
+port = 8711
+headless = true
+
+[browser]
+gatherUsageStats = false
+
+[client]
+toolbarMode = "minimal" # no "Deploy" button during a demo

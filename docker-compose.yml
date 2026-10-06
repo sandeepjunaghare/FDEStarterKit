@@ -1,7 +1,19 @@
-# Local parity check for what Render runs. The DB is Supabase cloud, not a container.
+# Local run of what Render runs: api + ui. The DB is Supabase cloud, not a container.
+# Ports 8710/8711 (not 8000/8501) to avoid clashing with other local apps. Fallback: docs/runbook-local.md
 services:
   api:
     build: ./api
     env_file: .env
+    environment:
+      PORT: "8710"
     ports:
-      - "8000:8000"
+      - "8710:8710"
+
+  ui:
+    build: ./ui
+    environment:
+      API_URL: http://api:8710
+    ports:
+      - "8711:8711"
+    depends_on:
+      - api

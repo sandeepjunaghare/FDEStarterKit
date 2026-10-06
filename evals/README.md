@@ -14,7 +14,7 @@ Scores the RAG pipeline against a golden set, as a black box over HTTP. Four met
 ```bash
 cd evals
 uv run python run.py golden/example.yaml --target fake            # harness self-test, no API
-uv run python run.py golden/<scenario>.yaml                       # local API, http://localhost:8000
+uv run python run.py golden/<scenario>.yaml                       # local API, http://localhost:8710
 uv run python run.py golden/<scenario>.yaml --target https://fde-api.onrender.com
 ```
 

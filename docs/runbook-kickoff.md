@@ -79,7 +79,7 @@ build straight from it, so a vague line here becomes a guess in two panes:
 ## 4. Tickets (0:34–0:38)
 
 ```
-/piv-slice-epic docs/<slug>.prd.md docs/architecture.md · local tracker: docs/tickets/<slug>.md · Slice into exactly 4 tickets that run in parallel, one per pane, each owning disjoint folders: A = api/agents api/schemas api/guardrails api/memory + shared files (api/main.py api/config.py api/pyproject.toml .env.example CLAUDE.md); B = api/rag api/db/migrations evals; C = ui; D = README.md docs render.yaml + non-technical visual. Name them T1–T4 for panes A–D. Cross-pane needs go to pane A as explicit interface notes.
+/piv-slice-epic docs/<slug>.prd.md docs/architecture.md · local tracker: docs/tickets/<slug>.md · Slice into exactly 4 tickets that run in parallel, one per pane, each owning disjoint folders: A = api/agents api/schemas api/guardrails api/memory + shared files (api/main.py api/config.py api/pyproject.toml .env.example CLAUDE.md); B = api/rag api/db/migrations evals; C = ui + the ui service in docker-compose.yml (build on the existing skeleton: keep ui/Dockerfile and .streamlit/config.toml); D = README.md docs render.yaml + non-technical visual. Name them T1–T4 for panes A–D. Cross-pane needs go to pane A as explicit interface notes.
 ```
 
 Commit before branching, or the worktrees won't have the docs:
@@ -128,4 +128,4 @@ scripts/smoke.sh https://fde-api.onrender.com latest --wait
 ```
 
 New migrations from pane B: `cd api && uv run python -m db.migrate` before the smoke test. Full procedure:
-`docs/runbook-deploy.md`.
+`docs/runbook-deploy.md`. Render failing or CI red with no time to fix: `docs/runbook-local.md`.

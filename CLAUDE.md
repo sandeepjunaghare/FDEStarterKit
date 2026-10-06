@@ -7,7 +7,7 @@ Supabase Postgres + pgvector, Streamlit front end, Langfuse evals, Docker → Re
 
 ## Architecture map
 <!-- Derived from research/tech-stack.md. BUILT: api/{main,config}.py, api/db/ (pool, smoke, migrations), api/tests/,
-     Dockerfile, docker-compose.yml, render.yaml, scripts/, CI. Everything else is the target layout — update as code lands. -->
+     Dockerfile, docker-compose.yml, render.yaml, scripts/, CI, evals/, ui/ skeleton. Everything else is the target layout — update as code lands. -->
 
 Request flow: `ui` → `POST /chat` (SSE) → planner → retriever → answerer → critic → streamed answer with citations.
 
@@ -33,8 +33,9 @@ api/                      # FastAPI service — Render web service; streams resp
   tests/                  # pytest; DB stubbed by default, `-m integration` hits real Supabase
   pyproject.toml          # uv project (Python 3.12) + ruff/pyright/pytest config; uv.lock is committed
   Dockerfile              # Render builds this from GitHub (see render.yaml)
-ui/                       # Streamlit app — second Render service; calls the API via API_URL
-  app.py                  # chat view with citations + visible session/persistent memory
+ui/                       # Streamlit app (own uv project) — calls the API via API_URL (default localhost:8710)
+  app.py                  # skeleton: API/DB status; planned: chat view with citations + visible memory
+  Dockerfile              # Streamlit on ${PORT:-8711}; .streamlit/config.toml holds port + demo settings
 evals/                    # own uv project (pane B). Black-box eval of POST /ask: hit rate, citations, guardrails,
                           #   faithfulness (Claude judge) → terminal, results/, optional Langfuse. evals/README.md
   contract.py             # the /ask response shape pane A must implement, and the golden-set models
@@ -45,6 +46,7 @@ scripts/
   copy-db-url.sh          # copies DATABASE_URL from .env for a dashboard, password masked in output
   check_embeddings.py     # Voyage embedding check (dim = EMBEDDING_DIM, ranking): uv run --script scripts/check_embeddings.py
 docs/runbook-deploy.md    # deploy procedure, troubleshooting, rollback, password rotation
+docs/runbook-local.md     # fallback: run + demo api and ui locally (Docker or plain uv) when Render/CI is blocked
 docs/runbook-kickoff.md   # brief → PRD → architecture → tickets → 4 worktree panes, minute by minute
 docs/templates/           # discovery-raw.md: freeform capture during the call → /discovery sorts it into
                           #   discovery-notes.md (stakeholder questions mapped to PRD sections)
@@ -59,7 +61,7 @@ docs/tickets/<slug>.md    # (per scenario) 4 parallel tickets, one per pane — 
 .gitleaks.toml            # secret-scan rules (CI): defaults + Anthropic any-prefix, Voyage, Postgres URL with password
 render.yaml               # Render Blueprint: Docker, virginia, /health, deploys after CI passes, DATABASE_URL set in dashboard
 .github/workflows/ci.yml  # CI: ruff + pyright + unit tests, Docker build, integration (only if DATABASE_URL secret set)
-docker-compose.yml        # local parity check: api now, ui when it exists (the DB is Supabase cloud, not a container)
+docker-compose.yml        # local run: api on 8710, ui on 8711 (the DB is Supabase cloud, not a container)
 .env.example              # every env var the stack uses; copy to .env
 research/tech-stack.md    # stack decisions + one-line defenses — the source for this map
 ```
@@ -84,7 +86,7 @@ own worktree via `/pane`, which owns disjoint folders; shared files (`api/main.p
 | Memory | `api/memory/` | planned |
 | Guardrails | `api/schemas/`, `api/guardrails/` | planned |
 | LLM Eval | `evals/` | verified: harness tested (fake target); real Claude judge (claude-haiku-4-5) passes the example set (`evals/results/20261006-162139-example.json`) and flags an unsupported claim (`pytest -m integration`), Langfuse traces on; per-scenario golden set + `/ask` on the day |
-| Front end | `ui/` | planned |
+| Front end | `ui/` | skeleton verified: Streamlit shows API + DB status, runs in Docker and with uv (`docs/runbook-local.md`); chat view planned |
 
 ## Ground rules
 - **Python:** 3.12 via uv; add deps with `uv add` (never pip). `ruff check`, `ruff format --check` and `pyright` must be clean before a commit.
@@ -104,7 +106,7 @@ own worktree via `/pane`, which owns disjoint folders; shared files (`api/main.p
 ## Commands
 - install: `cd api && uv sync`
 - test: `cd api && uv run pytest` (unit, no network) · `uv run pytest -m integration` (real Supabase)
-- run: `cd api && uv run uvicorn main:app --reload` · in Docker: `docker compose up --build`
+- run: `cd api && uv run uvicorn main:app --reload --port 8710` · `cd ui && uv run streamlit run app.py` (port 8711) · both in Docker: `docker compose up --build` · fallback steps: `docs/runbook-local.md`
 - migrate: `cd api && uv run python -m db.migrate` (local and Render share one Supabase DB, so run it once from here)
 - smoke: `scripts/smoke.sh` (local) · `scripts/smoke.sh https://fde-api.onrender.com latest --wait` (Render; waits until the live api/ code matches HEAD)
 - copy DATABASE_URL for a dashboard: `scripts/copy-db-url.sh` · full deploy procedure: `docs/runbook-deploy.md`
@@ -112,4 +114,5 @@ own worktree via `/pane`, which owns disjoint folders; shared files (`api/main.p
 - secret scan: `docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:v8.30.1 git /repo --config /repo/.gitleaks.toml --redact`
 - lint + format: `cd api && uv run ruff check --fix . ../scripts && uv run ruff format . ../scripts`
 - type-check: `cd api && uv run pyright` (standard mode; api/ only — scripts/ are standalone uv scripts)
+- ui checks: `cd ui && uv run ruff check . && uv run ruff format --check . && uv run pyright` (ui/ is its own uv project)
 - evals: `cd evals && uv run python run.py golden/<scenario>.yaml [--target URL|fake] [--only ids] [--compare results/x.json]` · checks: `cd evals && uv run ruff check . && uv run pyright && uv run pytest`

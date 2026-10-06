@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Deploy smoke test: liveness, deployed commit, DB + pgvector, and a write/read/vector-search
 # roundtrip (rolled back).
-# Usage: scripts/smoke.sh [base_url] [latest|expected_sha] [--wait]   (default http://localhost:8000)
+# Usage: scripts/smoke.sh [base_url] [latest|expected_sha] [--wait]   (default http://localhost:8710)
 #   scripts/smoke.sh https://fde-api.onrender.com latest          # FAILs unless live api/ code equals HEAD's
 #   scripts/smoke.sh https://fde-api.onrender.com latest --wait   # first waits (up to 5 min) for that
 #   scripts/smoke.sh https://fde-api.onrender.com 52c6029         # FAILs unless exactly that commit is live
@@ -14,7 +14,7 @@ args=()
 for a in "$@"; do
   if [[ $a == --wait ]]; then wait=1; else args+=("$a"); fi
 done
-base="${args[0]:-http://localhost:8000}"
+base="${args[0]:-http://localhost:8710}"
 base="${base%/}"
 expected="${args[1]:-}"
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

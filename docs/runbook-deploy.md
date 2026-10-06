@@ -120,6 +120,7 @@ Changes outside `api/` (docs, scripts) do not redeploy, by design (`buildFilter`
 | `503 {"detail":"UndefinedTable"}` | Migrations not applied to this database | `cd api && uv run python -m db.migrate` |
 | Repo missing in Render's picker | Render's GitHub app lacks access | One-time setup, step 1 |
 | Push didn't deploy | CI failed, change was outside `api/`, or auto-deploy is off | GitHub → Actions for CI. Render → fde-api → **Settings → Build & Deploy → Auto-Deploy** = After CI Checks Pass |
+| Failed twice, or CI red with no time to fix | Demo can't wait for Render | Run and demo locally: `docs/runbook-local.md` |
 
 ---
 
