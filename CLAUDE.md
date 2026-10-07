@@ -1,11 +1,13 @@
 # CLAUDE.md — FDE Starter Kit
 
 ## What this is
+
 RAG prototype with a four-agent pipeline (planner → retriever → answerer → critic) that answers with citations,
 enforces guardrails in code, and keeps per-user session + persistent memory. Stack: Claude Agent SDK + FastAPI (SSE),
 Supabase Postgres + pgvector, Streamlit front end, Langfuse evals, Docker → Render.
 
 ## Architecture map
+
 <!-- Derived from research/tech-stack.md. BUILT: api/{main,config}.py, api/db/ (pool, smoke, migrations), api/tests/,
      Dockerfile, docker-compose.yml, render.yaml, scripts/, CI, evals/, ui/ skeleton. Everything else is the target layout — update as code lands. -->
 
@@ -72,6 +74,7 @@ research/tech-stack.md    # stack decisions + one-line defenses — the source f
 External services (not in the repo): Supabase (Postgres + pgvector), Anthropic API, hosted embedding model, Langfuse, Render.
 
 ## How work flows
+
 What before how: PRD → architecture → tickets (`docs/runbook-kickoff.md`), then each ticket runs the PIV loop in its
 own worktree via `/pane`, which owns disjoint folders; shared files (`api/main.py`, `api/config.py`,
 `api/pyproject.toml`, `api/uv.lock`, `.env.example`, `CLAUDE.md`) belong to pane A. Validate with `/piv-validate`.
@@ -92,6 +95,7 @@ own worktree via `/pane`, which owns disjoint folders; shared files (`api/main.p
 | Front end | `ui/` | skeleton verified: Streamlit shows API + DB status, runs in Docker and with uv (`docs/runbook-local.md`); chat view planned |
 
 ## Ground rules
+
 - **Python:** 3.12 via uv; add deps with `uv add` (never pip). `ruff check`, `ruff format --check` and `pyright` must be clean before a commit.
 - **Types:** every agent input/output is a Pydantic model in `api/schemas/`; guardrails validate those models in code.
 - **Config:** read settings only through `config.get_settings()`; never `os.environ` elsewhere. Secrets live in `.env` only; add new keys to `.env.example` **with empty values** (CI secret scan fails the build otherwise).
@@ -101,12 +105,14 @@ own worktree via `/pane`, which owns disjoint folders; shared files (`api/main.p
 - **Commits:** about every 20 minutes, conventional prefix plus the rubric item it serves, e.g. `feat: add critic agent — guardrails`.
 
 ## Working principles
+
 - Review every diff before accepting it; never leave a parallel session running unattended for more than 10 minutes.
 - No library that hasn't been used in a dry run. If a session stalls, restart it with a narrower prompt rather than debugging it by hand.
 - Out-of-scope ideas go to a "Release 2" list, not into the code.
 - If a deploy fails twice, run locally and say so.
 
 ## Commands
+
 - install: `cd api && uv sync`
 - test: `cd api && uv run pytest` (unit, no network) · `uv run pytest -m integration` (real Supabase)
 - run: `cd api && uv run uvicorn main:app --reload --port 8710` · `cd ui && uv run streamlit run app.py` (port 8711) · both in Docker: `docker compose up --build` · fallback steps: `docs/runbook-local.md`

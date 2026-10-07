@@ -108,7 +108,7 @@ uv sync
 uv run uvicorn main:app --reload --port 8710
 ```
 
-Or API + UI in Docker, from the repo root (UI on http://localhost:8711):
+Or API + UI in Docker, from the repo root (UI on <http://localhost:8711>):
 
 ```bash
 docker compose up --build
@@ -225,7 +225,7 @@ local: scripts/smoke.sh   →   git push   →   CI green   →   Render builds 
 
 After that, every push to `main` that touches `api/` redeploys once CI is green.
 
-**Notes**
+### Notes
 
 - `/health` never touches the database, so a Supabase blip can't block a deploy. `scripts/smoke.sh` checks the data path.
 - The container listens on Render's `$PORT` (8710 in docker compose) and runs as a non-root user.

@@ -132,7 +132,7 @@ cd ui && uv run streamlit run app.py                                          # 
 scripts/smoke.sh --wait                                                       # terminal 3
 ```
 
-Open http://localhost:8711 and ask 2–3 golden questions: one answered with citations, one the domain rule
+Open <http://localhost:8711> and ask 2–3 golden questions: one answered with citations, one the domain rule
 refuses. Works → step 8. Doesn't → fix on `main` and re-check; don't push a broken app to find out on Render.
 
 ## 8. Deploy (1:50–2:05)

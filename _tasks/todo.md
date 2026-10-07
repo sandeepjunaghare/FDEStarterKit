@@ -529,7 +529,7 @@ Docs only; no code behaviour changes. evals/targets.py and its tests stay on `/a
 
 - [x] `git grep -n -E "/chat|/ask"` — every hit consistent with the contract above
 - [x] `cd evals && uv run ruff check . && uv run pyright && uv run pytest` (docstring touched)
-- [x] markdownlint: no new errors on the touched .md files (3 old ones remain, see Review)
+- [x] markdownlint: no new errors on the touched .md files (older ones remain, see Review)
 
 ## Review
 
@@ -539,5 +539,8 @@ Done 2026-10-06. Docs + one docstring; no behaviour change.
   same `AskResponse`. evals: ruff, format, pyright clean; pytest 23 passed.
 - Changed vs plan: wrote the SSE so `token` events stream only the critic-approved answer. Streaming the answerer's
   draft would show unchecked text and break "critic is the gate before anything reaches the user".
-- markdownlint: 3 errors left on untouched lines (README bare URL line 111 + `**Notes**` heading line 228,
-  kickoff bare URL line 135); not fixed here.
+- markdownlint: errors left on untouched lines; not fixed here. I reported 3 (README bare URL + `**Notes**`
+  heading, kickoff bare URL; fixed next) but missed 8 more in CLAUDE.md (MD022/MD032: no blank line after
+  4 headings); the check printed only the last 3 lines of the output.
+- Follow-up (approved in chat): fixed all 11 — bare URLs wrapped in `<>`, `**Notes**` → `### Notes`, blank line
+  after every `##` heading in CLAUDE.md. markdownlint on the 4 touched files: 0 issues.
