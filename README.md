@@ -4,7 +4,7 @@
 
 A retrieval-augmented (RAG) assistant built as a four-agent pipeline that answers only from your documents, cites its sources, and refuses what is out of scope.
 
-**Stack:** Claude Agent SDK · FastAPI (SSE) · Supabase Postgres + pgvector · Streamlit · Langfuse · Docker → Render
+**Stack:** Anthropic Messages API · FastAPI (SSE) · Supabase Postgres + pgvector · Streamlit · Langfuse · Docker → Render
 
 > **Status:** the API skeleton, Supabase connection and health checks are built and tested. The agents, retrieval, memory, UI and evals below are the target design and land incrementally. Each section marks what exists today.
 
@@ -35,7 +35,7 @@ flowchart LR
 | Component | Choice | Why |
 |---|---|---|
 | Orchestration | Planner → Retriever → Answerer → Critic | Each agent has one job; the critic is the last gate before the user |
-| Framework | Claude Agent SDK, FastAPI with SSE | Outputs are checked against Pydantic schemas, so guardrails live in code, not prompts |
+| Framework | Anthropic Messages API, FastAPI with SSE | Outputs are checked against Pydantic schemas, so guardrails live in code, not prompts |
 | Vector DB | pgvector on Supabase | One managed Postgres holds vectors and user memory, identical locally and on Render |
 | Embeddings | Voyage AI `voyage-4`, 1024 dims, $0.06/1M tokens (200M free) | Anthropic's recommended provider; 1024 fits a pgvector HNSW index; swapping is one config line |
 | Memory | Session (conversation) + persistent (user profile in Postgres) | Two layers, scoped per user, both visible in the UI |

@@ -3,7 +3,7 @@
 ## What this is
 
 RAG prototype with a four-agent pipeline (planner → retriever → answerer → critic) that answers with citations,
-enforces guardrails in code, and keeps per-user session + persistent memory. Stack: Claude Agent SDK + FastAPI (SSE),
+enforces guardrails in code, and keeps per-user session + persistent memory. Stack: Anthropic Messages API + FastAPI (SSE),
 Supabase Postgres + pgvector, Streamlit front end, Langfuse evals, Docker → Render.
 
 ## Architecture map
@@ -21,7 +21,7 @@ api/                      # FastAPI service — Render web service; streams resp
                           #   GET /version (deployed git commit), GET /health/db (Supabase + pgvector),
                           #   POST /smoke (write/read/vector roundtrip, rolled back); planned: POST /ask (JSON) and
                           #   POST /chat (SSE), both thin wrappers over agents/pipeline.py
-  agents/                 # Claude Agent SDK pipeline — one job per agent, no shared side effects
+  agents/                 # Anthropic Messages API pipeline — one job per agent, no shared side effects
     planner.py            # router: in-scope → retrieve; out-of-scope → refuse
     retriever.py          # embed query → pgVector top-k from Supabase
     answerer.py           # draft answer that cites retrieved chunks
@@ -88,7 +88,7 @@ own worktree via `/pane`, which owns disjoint folders; shared files (`api/main.p
 | Vector DB | `api/db/`, `api/db/migrations/` | connection + smoke table built; documents/chunks table planned |
 | Embedding model | `api/rag/`, `EMBEDDING_*` + `VOYAGE_API_KEY` in `.env` | chosen + verified: voyage-4, 1024 dims → `vector(1024)` (`scripts/check_embeddings.py`); rag/ client planned |
 | Multi-agent orchestration | `api/agents/` | planned |
-| Framework | `api/main.py` (FastAPI) | FastAPI built; Agent SDK planned |
+| Framework | `api/main.py` (FastAPI) | FastAPI built; Messages API agents planned |
 | Memory | `api/memory/` | planned |
 | Guardrails | `api/schemas/`, `api/guardrails/` | planned |
 | LLM Eval | `evals/` | verified: harness tested (fake target); real Claude judge (claude-haiku-4-5) passes the example set (`evals/results/20261006-162139-example.json`) and flags an unsupported claim (`pytest -m integration`), Langfuse traces on; per-scenario golden set + `/ask` on the day |
