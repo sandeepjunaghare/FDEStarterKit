@@ -52,8 +52,10 @@ api/                  FastAPI service (Render web service)
   db/                 pool, health probe, smoke, SQL migrations   ✅ built
   tests/              pytest (unit + Supabase integration)        ✅ built
   agents/ schemas/ guardrails/ memory/ rag/                       ⏳ planned
-ui/                   Streamlit app (second Render service)       ⏳ planned
-evals/                golden set + eval runner                    ⏳ planned
+ui/                   Streamlit app: API + DB status skeleton     ✅ built
+                      chat view, second Render service            ⏳ planned
+evals/                eval harness: runner, metrics, Claude judge ✅ built
+  golden/<scenario>.yaml  per-scenario golden set                 ⏳ planned
 scripts/check_db.py   standalone Supabase + pgvector check        ✅ built
 scripts/smoke.sh      deploy smoke test for any URL               ✅ built
 scripts/check_embeddings.py  Voyage embedding check (voyage-4, 1024)  ✅ built
@@ -180,14 +182,6 @@ uv run python run.py golden/<scenario>.yaml --only <case-id> --compare results/<
 
 - **Golden set:** 10–15 question/answer pairs with their source doc + snippet, including out-of-scope, PII and domain-rule cases.
 - **Loop:** run, read the failing case's reason, fix the prompt, retrieval or guardrail, rerun just that case, then compare before → after.
-
----|---|---|
-| Retrieval hit rate | Did the retriever return the chunk that holds the answer? | Each golden question lists its source chunk(s); a hit means one appears in the top-k |
-| Faithfulness | Is every claim in the answer supported by the cited chunks? | LLM-as-judge, scored and traced in Langfuse |
-| Guardrail behaviour | Are out-of-scope and PII-bearing questions refused or redacted? | Golden cases with an expected refusal |
-
-- **Golden set:** 10–15 question/answer pairs with their source chunks, including out-of-scope cases.
-- **Loop:** run the evals, find a failing case, fix the prompt, retrieval or guardrail, then re-run to show the score move. Results and traces are in Langfuse for side-by-side comparison.
 
 ---
 
