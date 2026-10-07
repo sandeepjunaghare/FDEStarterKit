@@ -502,3 +502,42 @@ be demoed locally. Supabase outage is out of scope (user decision).
   "Deploy" toolbar button for demos.
 - Port change touched smoke.sh, evals --target default, .env.example, READMEs. Render unaffected ($PORT).
 - Not done: no CI job for ui/ (lint/types run locally only) and no Render service for ui (pane C/D on the day).
+
+---
+
+# Task: /chat vs /ask — one pipeline, two endpoints (approved in chat)
+
+Why: CLAUDE.md, README and ui/ name `POST /chat` (SSE); evals/ and the kickoff checklist name `POST /ask` (JSON).
+Neither exists yet. Decision: both, backed by the same pipeline; `/chat`'s final `done` event is an `AskResponse`.
+
+Contract (to write once, in evals/README, and point to it from elsewhere):
+
+- `POST /ask  {question, user_id}` → `AskResponse` JSON — evals, scripts, curl.
+- `POST /chat {question, user_id}` → SSE: `status {agent}` · `token {text}` · `done AskResponse` — the UI.
+- Same request body, same pipeline, same final model; `/chat` only adds progress + tokens.
+
+Docs only; no code behaviour changes. evals/targets.py and its tests stay on `/ask`.
+
+- [x] `evals/README.md` — "The `/ask` contract" → "The `/ask` and `/chat` contract": add the `/chat` SSE events
+- [x] `evals/contract.py` — module docstring: one line that `/chat`'s `done` event carries the same `AskResponse`
+- [x] `CLAUDE.md` — request flow line + `main.py` route list: `POST /ask` (JSON) and `POST /chat` (SSE), one pipeline
+- [x] `README.md` — mermaid: label the evals → `POST /ask` path next to UI → `POST /chat (SSE)`
+- [x] `docs/runbook-kickoff.md` step 3 checklist — `/ask` and `/chat` both return/end with `AskResponse`
+- [x] `ui/app.py` — no change (placeholder already says `POST /chat`)
+
+## Verification
+
+- [x] `git grep -n -E "/chat|/ask"` — every hit consistent with the contract above
+- [x] `cd evals && uv run ruff check . && uv run pyright && uv run pytest` (docstring touched)
+- [x] markdownlint: no new errors on the touched .md files (3 old ones remain, see Review)
+
+## Review
+
+Done 2026-10-06. Docs + one docstring; no behaviour change.
+
+- Worked: every `/chat` and `/ask` reference now says one pipeline, `/ask` = JSON, `/chat` = SSE ending in the
+  same `AskResponse`. evals: ruff, format, pyright clean; pytest 23 passed.
+- Changed vs plan: wrote the SSE so `token` events stream only the critic-approved answer. Streaming the answerer's
+  draft would show unchecked text and break "critic is the gate before anything reaches the user".
+- markdownlint: 3 errors left on untouched lines (README bare URL line 111 + `**Notes**` heading line 228,
+  kickoff bare URL line 135); not fixed here.

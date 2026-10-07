@@ -30,7 +30,7 @@ Exit code `0` = every threshold met; `1` = a threshold missed, a case errored, o
 With `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` / `LANGFUSE_BASE_URL` set, each case is also sent to
 Langfuse as a trace with its scores. The judge needs `ANTHROPIC_API_KEY` (repo-root `.env`).
 
-## The `/ask` contract (implemented by the API)
+## The `/ask` and `/chat` contract (implemented by the API)
 
 ```
 POST /ask   {"question": "...", "user_id": "..."}
@@ -41,6 +41,18 @@ POST /ask   {"question": "...", "user_id": "..."}
 ```
 
 Models: `contract.py`. `retrieved` is in rank order and is also the context the judge checks against.
+
+`POST /chat` is the UI's streaming twin: same request body, same pipeline, served as SSE.
+
+```
+POST /chat  {"question": "...", "user_id": "..."}
+→ event: status  {"agent": "planner"}        # planner | retriever | answerer | critic
+  event: token   {"text": "..."}              # the critic-approved answer, in pieces
+  event: done    {AskResponse}                # exactly what /ask returns
+```
+
+`token` events start only after the critic has passed the answer, so no unchecked text reaches the user; the
+`done` payload is authoritative. The harness calls `/ask` only.
 
 ## Golden set format
 

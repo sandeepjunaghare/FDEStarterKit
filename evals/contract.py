@@ -5,6 +5,9 @@ POST /ask
   response: AskResponse below. `retrieved` is what the retriever returned, in rank order;
             `citations` are chunk_ids from `retrieved` that the answer relies on; `action` says
             what the guardrails did.
+
+POST /chat takes the same request, runs the same pipeline and streams SSE; its final `done` event
+is this same AskResponse, so the UI and the evals see one answer shape.
 """
 
 from typing import Literal, Self

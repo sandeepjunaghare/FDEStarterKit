@@ -10,12 +10,15 @@ Supabase Postgres + pgvector, Streamlit front end, Langfuse evals, Docker → Re
      Dockerfile, docker-compose.yml, render.yaml, scripts/, CI, evals/, ui/ skeleton. Everything else is the target layout — update as code lands. -->
 
 Request flow: `ui` → `POST /chat` (SSE) → planner → retriever → answerer → critic → streamed answer with citations.
+`POST /ask` runs the same pipeline and returns the result as JSON (evals, scripts). `/chat`'s final `done` event is that
+same `AskResponse`; the contract lives in `evals/README.md`.
 
 ```
 api/                      # FastAPI service — Render web service; streams responses over SSE
   main.py                 # app + lifespan (DB pool) + routes: GET /health (liveness, Render's check),
                           #   GET /version (deployed git commit), GET /health/db (Supabase + pgvector),
-                          #   POST /smoke (write/read/vector roundtrip, rolled back), POST /chat (SSE, planned)
+                          #   POST /smoke (write/read/vector roundtrip, rolled back); planned: POST /ask (JSON) and
+                          #   POST /chat (SSE), both thin wrappers over agents/pipeline.py
   agents/                 # Claude Agent SDK pipeline — one job per agent, no shared side effects
     planner.py            # router: in-scope → retrieve; out-of-scope → refuse
     retriever.py          # embed query → pgVector top-k from Supabase

@@ -68,8 +68,9 @@ build straight from it, so a vague line here becomes a guess in two panes:
       `api/db/migrations/0002_*.sql` (pane B).
 - [ ] **Chunking:** unit (section, page, row) and size; what `doc` and `chunk_id` hold. `chunk_id` must be
       stable, since citations and the golden set point at it.
-- [ ] **`/ask` response:** matches `evals/contract.py` `AskResponse` (answer, citations, action, retrieved).
-      Which `action` values this scenario uses: answer, refuse, redact, escalate.
+- [ ] **`/ask` and `/chat` response:** `/ask` returns `evals/contract.py` `AskResponse` (answer, citations,
+      action, retrieved); `/chat` streams the same pipeline and ends with that `AskResponse` as its `done` event
+      (`evals/README.md`). Which `action` values this scenario uses: answer, refuse, redact, escalate.
 - [ ] **Domain rule:** one testable sentence, "refuse/escalate if …; every answer must cite …", plus what the
       user sees when it fires. Lives in `api/guardrails/` (pane A).
 - [ ] **Golden cases for it:** at least one `domain_rule` case, one `out_of_scope`, one `pii` (pane B,

@@ -16,6 +16,7 @@ A retrieval-augmented (RAG) assistant built as a four-agent pipeline that answer
 flowchart LR
     U[User] --> UI[Streamlit UI]
     UI -- "POST /chat (SSE)" --> API[FastAPI]
+    EV[Eval harness] -- "POST /ask (JSON)" --> API
     subgraph Pipeline [Agent pipeline]
         P[Planner / router] -->|in scope| R[Retriever]
         P -->|out of scope| X[Refusal]
