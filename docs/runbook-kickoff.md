@@ -26,6 +26,21 @@ Time boxes are targets. If a step runs over, tighten its input; don't skip the s
 
 ---
 
+## 0. Before the day: a fresh Supabase project
+
+The practice database holds other exercises' tables (`chunks`, `filings`, `session_turns`, `user_profiles`) and
+migrations (`0002_filings_chunks.sql`, `0003_memory.sql`). A day-of `0002_*` would be skipped if its name matched
+an old one, or a `create table if not exists chunks` would quietly reuse the old 131-row table and retrieval would
+return another scenario's text. So the day runs on a new, empty project:
+
+1. Supabase → New project (region us-east-1, next to Render's virginia) → Database → Extensions → `vector`.
+2. Connect → Session pooler URL → `DATABASE_URL` in `.env` and in Render → fde-api → Environment.
+3. `uv run --script scripts/check_db.py` → `cd api && uv run python -m db.migrate` (only `0001_smoke.sql`).
+4. `scripts/smoke.sh` locally, then `scripts/smoke.sh https://fde-api.onrender.com latest --wait`.
+5. Render → Environment also has `ANTHROPIC_API_KEY` and `VOYAGE_API_KEY` (declared in `render.yaml`).
+
+---
+
 ## 1. Discovery (0:10–0:20)
 
 ```bash
@@ -112,6 +127,7 @@ Repeat for `pane-b` (`/pane B …#T2`), `pane-c` (`/pane C …#T3`), `pane-d` (`
 Each pane plans, then **stops for your review** (≤10-line summary). Review the plan, say `go` or ask for changes.
 Rotate through the panes; don't leave one unattended for more than 10 minutes. Each pane validates and commits
 on its own branch, with the rubric item in the message. "Needs from A" items go to pane A.
+Panes A and B: start from the patterns in **Dry-run lessons** at the end of this runbook.
 
 ## 7. Merge + validate (1:40–1:50)
 
@@ -144,3 +160,40 @@ scripts/smoke.sh https://fde-api.onrender.com latest --wait
 
 Migrations already ran in step 7 (local and Render share one database). Full procedure:
 `docs/runbook-deploy.md`. Render failing or CI red with no time to fix: `docs/runbook-local.md`.
+
+---
+
+## Dry-run lessons (2026-10-07)
+
+A throwaway `/ask` (4 agents, Messages API, Voyage → pgvector) was built on the fake benefits corpus, run
+against `evals/golden/example.yaml` (PASS, every metric 1.00), then deleted. What carries over to the day:
+
+**Patterns that worked (pane A/B, copy them):**
+
+- **One shared LLM helper** (`agents/llm.py`): `client.beta.messages.parse(model, system, messages,
+  output_format=<Pydantic model>)`, the same call `evals/judge.py` makes. It maps `stop_reason == "refusal"` →
+  `action=refuse`, `parsed_output is None` → error, and API/connection errors → one specific exception class.
+  `/ask` returns 503 with the class name only.
+- **Models:** `claude-haiku-4-5` for planner and critic; `claude-sonnet-5-5` for the answerer with
+  `output_config={"effort": "low"}` plus `betas=["server-side-fallback-2026-07-01"], fallbacks="default"`.
+- **Critic:** deterministic citation check first (non-empty, ⊆ retrieved chunk ids), then the LLM check.
+- **Ingest:** stable `chunk_id = "<doc stem>-<ord>"`, `insert … on conflict (chunk_id) do update`, so
+  re-running it never duplicates chunks. `input_type="document"` at ingest, `"query"` at search.
+- **Search:** `1 - (embedding <=> %s::vector)` as score, `order by embedding <=> %s::vector limit k`, with an
+  HNSW `vector_cosine_ops` index.
+- **Settings:** `anthropic_api_key`, `voyage_api_key`, `embedding_model`, `embedding_dim` in `config.py` with
+  empty defaults (the health routes still start without them); the clients take the key from settings, because
+  `.env` is read by pydantic-settings and never lands in `os.environ`.
+
+**Numbers to plan around:**
+
+- Answerable question: **6.5–8 s** (planner 1–2.6 · retriever 0.3–0.4 · answerer 2–3.3 · critic 1.6–2.7 s).
+  Refusal: 1–2 s (stops at the planner). The `/chat` status events matter, and the UI's HTTP timeout must be
+  ≥ 30 s (the skeleton uses 10 s).
+- Ingest of 7 chunks: ~1 s embed. 4-case eval run: 10 s.
+
+**Friction (lost minutes in the dry run):**
+
+- The Claude Code sandbox blocks uv's cache: `uv add` / `uv run` need the sandbox off.
+- Ruff's line limit is 100: wrap long prompt lines in the system prompts.
+- Pyright: `from voyageai.client_async import AsyncClient` (not `voyageai.AsyncClient`).
