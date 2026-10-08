@@ -88,7 +88,7 @@ own worktree via `/pane`, which owns disjoint folders; shared files (`api/main.p
 | Vector DB | `api/db/`, `api/db/migrations/` | connection + smoke table built; documents/chunks table planned |
 | Embedding model | `api/rag/`, `EMBEDDING_*` + `VOYAGE_API_KEY` in `.env` | chosen + verified: voyage-4, 1024 dims → `vector(1024)` (`scripts/check_embeddings.py`); rag/ client planned |
 | Multi-agent orchestration | `api/agents/` | planned |
-| Framework | `api/main.py` (FastAPI) | FastAPI built; Messages API agents planned |
+| Framework | `api/main.py` (FastAPI) | FastAPI built; Messages API verified in `evals/judge.py` (`messages.parse` → Pydantic); not yet in `api/` (no `anthropic` dep, no `/ask` dry run); agents planned |
 | Memory | `api/memory/` | planned |
 | Guardrails | `api/schemas/`, `api/guardrails/` | planned |
 | LLM Eval | `evals/` | verified: harness tested (fake target); real Claude judge (claude-haiku-4-5) passes the example set (`evals/results/20261006-162139-example.json`) and flags an unsupported claim (`pytest -m integration`), Langfuse traces on; per-scenario golden set + `/ask` on the day |
@@ -107,7 +107,8 @@ own worktree via `/pane`, which owns disjoint folders; shared files (`api/main.p
 ## Working principles
 
 - Review every diff before accepting it; never leave a parallel session running unattended for more than 10 minutes.
-- No library that hasn't been used in a dry run. If a session stalls, restart it with a narrower prompt rather than debugging it by hand.
+- No library that hasn't been used in a dry run: one end-to-end call on a throwaway branch, recorded as "verified" in the
+  rubric map. If a session stalls, restart it with a narrower prompt rather than debugging it by hand.
 - Out-of-scope ideas go to a "Release 2" list, not into the code.
 - If a deploy fails twice, run locally and say so.
 
