@@ -17,3 +17,7 @@ services:
     envVars:
       - key: DATABASE_URL # Supabase session pooler URL; entered in the dashboard, never committed
         sync: false
+      - key: ANTHROPIC_API_KEY # agents (Messages API); entered in the dashboard, never committed
+        sync: false
+      - key: VOYAGE_API_KEY # query embeddings in the retriever; entered in the dashboard, never committed
+        sync: false
